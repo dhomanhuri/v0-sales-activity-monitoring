@@ -1,0 +1,156 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { UserDialog } from "./user-dialog";
+import { Plus, Search } from 'lucide-react';
+
+export function UsersList({ initialUsers }: { initialUsers: any[] }) {
+  const [users, setUsers] = useState(initialUsers);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.nama_lengkap.toLowerCase().includes(search.toLowerCase()) ||
+      user.email.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const handleUserSaved = (updatedUser: any) => {
+    if (editingUser) {
+      setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+      setEditingUser(null);
+    } else {
+      setUsers([updatedUser, ...users]);
+    }
+    setShowDialog(false);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setUsers(users.filter(u => u.id !== userId));
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Input
+            placeholder="Cari user..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
+          />
+        </div>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          className="px-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-50"
+        >
+          <option value="">Semua Role</option>
+          <option value="Admin">Admin</option>
+          <option value="GM">General Manager</option>
+          <option value="Sales">Sales</option>
+        </select>
+        <Button
+          onClick={() => {
+            setEditingUser(null);
+            setShowDialog(true);
+          }}
+          className="gap-2 bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4" />
+          Tambah User
+        </Button>
+      </div>
+
+      {showDialog && (
+        <UserDialog
+          user={editingUser}
+          onClose={() => {
+            setShowDialog(false);
+            setEditingUser(null);
+          }}
+          onSave={handleUserSaved}
+        />
+      )}
+
+      <Card className="bg-slate-800 border-slate-700">
+        <CardContent className="pt-6">
+          {filteredUsers.length === 0 ? (
+            <p className="text-center text-slate-400 py-8">Tidak ada user ditemukan</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-700">
+                    <th className="text-left py-3 px-4 text-slate-300">Nama</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Email</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Role</th>
+                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
+                    <th className="text-right py-3 px-4 text-slate-300">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="border-b border-slate-700 hover:bg-slate-700/50"
+                    >
+                      <td className="py-3 px-4 text-slate-50">{user.nama_lengkap}</td>
+                      <td className="py-3 px-4 text-slate-400">{user.email}</td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          className={
+                            user.role === "Admin"
+                              ? "bg-red-900 text-red-200"
+                              : user.role === "GM"
+                              ? "bg-blue-900 text-blue-200"
+                              : "bg-green-900 text-green-200"
+                          }
+                        >
+                          {user.role}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        <Badge
+                          className={
+                            user.status_aktif
+                              ? "bg-green-900 text-green-200"
+                              : "bg-gray-900 text-gray-200"
+                          }
+                        >
+                          {user.status_aktif ? "Aktif" : "Nonaktif"}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingUser(user);
+                            setShowDialog(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
