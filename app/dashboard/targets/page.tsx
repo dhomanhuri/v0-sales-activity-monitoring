@@ -33,7 +33,7 @@ export default async function TargetsPage() {
     query = query.eq("gm_id", user.id);
   }
 
-  const { data: targets } = await query.order("periode_bulan", { ascending: false });
+  const { data: targets } = await query.order("periode_tahun", { ascending: false });
 
   return (
     <div className="p-8 bg-slate-900 min-h-screen space-y-6">

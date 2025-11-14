@@ -33,7 +33,7 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
   const filteredTargets = targets.filter((target) => {
     const matchesSearch =
       (target.users as any)?.nama_lengkap.toLowerCase().includes(search.toLowerCase()) ||
-      target.periode_bulan.toLowerCase().includes(search.toLowerCase());
+      target.periode_tahun.toString().includes(search);
     return matchesSearch;
   });
 
@@ -118,7 +118,7 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
                           {(target.users as any)?.nama_lengkap}
                         </h3>
                         <p className="text-sm text-slate-400">
-                          Periode: {target.periode_bulan}
+                          Periode: {target.periode_tahun}
                         </p>
                       </div>
                       <Button

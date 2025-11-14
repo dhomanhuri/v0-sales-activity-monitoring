@@ -27,7 +27,7 @@ export function TargetDialog({
 }) {
   const [formData, setFormData] = useState({
     sales_id: "",
-    periode_bulan: "",
+    periode_tahun: new Date().getFullYear(),
     target_jumlah_lead: 0,
     target_jumlah_proposal: 0,
     target_jumlah_closing: 0,
@@ -40,7 +40,7 @@ export function TargetDialog({
     if (target) {
       setFormData({
         sales_id: target.sales_id,
-        periode_bulan: target.periode_bulan,
+        periode_tahun: target.periode_tahun,
         target_jumlah_lead: target.target_jumlah_lead || 0,
         target_jumlah_proposal: target.target_jumlah_proposal || 0,
         target_jumlah_closing: target.target_jumlah_closing || 0,
@@ -98,15 +98,8 @@ export function TargetDialog({
     }
   };
 
-  // Generate month options for current year
-  const months = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
   const currentYear = new Date().getFullYear();
-  const periodOptions = months.map((month, i) => 
-    `${month} ${currentYear}`
-  );
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -137,19 +130,19 @@ export function TargetDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Periode Bulan*</Label>
+            <Label className="text-slate-300">Periode Tahun*</Label>
             <select
-              value={formData.periode_bulan}
+              value={formData.periode_tahun}
               onChange={(e) =>
-                setFormData({ ...formData, periode_bulan: e.target.value })
+                setFormData({ ...formData, periode_tahun: parseInt(e.target.value) })
               }
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
               required
             >
-              <option value="">Pilih Periode</option>
-              {periodOptions.map((period) => (
-                <option key={period} value={period}>
-                  {period}
+              <option value="">Pilih Tahun</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
                 </option>
               ))}
             </select>
