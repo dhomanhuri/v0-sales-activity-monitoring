@@ -70,78 +70,26 @@ CREATE TABLE IF NOT EXISTS public.targets (
 );
 
 -- Enable RLS on all tables
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.targets ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for users table
-CREATE POLICY "Users can view their own data" ON public.users FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Admins can view all users" ON public.users FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "Users can update their own data" ON public.users FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Admins can manage all users" ON public.users FOR UPDATE USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "Admins can insert users" ON public.users FOR INSERT WITH CHECK (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "Admins can delete users" ON public.users FOR DELETE USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
+-- Users table is accessible to all authenticated users; app handles authorization
 
--- RLS Policies for customers table
+-- Customers table policies
 CREATE POLICY "Sales see own customers" ON public.customers FOR SELECT USING (sales_id = auth.uid());
-CREATE POLICY "GMs see their team customers" ON public.customers FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'GM' AND 
-    sales_id IN (SELECT id FROM public.users WHERE gm_id = auth.uid()))
-);
-CREATE POLICY "Admins see all customers" ON public.customers FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
 CREATE POLICY "Sales can insert own customers" ON public.customers FOR INSERT WITH CHECK (sales_id = auth.uid());
-CREATE POLICY "GMs can insert for their team" ON public.customers FOR INSERT WITH CHECK (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'GM' AND 
-    sales_id IN (SELECT id FROM public.users WHERE gm_id = auth.uid()))
-);
-CREATE POLICY "Admins can insert customers" ON public.customers FOR INSERT WITH CHECK (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
 
--- RLS Policies for activity_types (readable by all authenticated users)
+-- Activity types - readable by all authenticated users
 CREATE POLICY "All authenticated users can view activity types" ON public.activity_types FOR SELECT USING (true);
-CREATE POLICY "Admins can manage activity types" ON public.activity_types FOR INSERT WITH CHECK (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "Admins can delete activity types" ON public.activity_types FOR DELETE USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
 
--- RLS Policies for activities table
+-- Activities table policies
 CREATE POLICY "Sales see own activities" ON public.activities FOR SELECT USING (sales_id = auth.uid());
-CREATE POLICY "GMs see their team activities" ON public.activities FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'GM' AND 
-    sales_id IN (SELECT id FROM public.users WHERE gm_id = auth.uid()))
-);
-CREATE POLICY "Admins see all activities" ON public.activities FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
 CREATE POLICY "Sales can insert own activities" ON public.activities FOR INSERT WITH CHECK (sales_id = auth.uid());
-CREATE POLICY "Admins can insert activities" ON public.activities FOR INSERT WITH CHECK (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
 
--- RLS Policies for targets table
+-- Targets table policies
 CREATE POLICY "GMs see their team targets" ON public.targets FOR SELECT USING (
-  gm_id = auth.uid() OR 
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "Admins see all targets" ON public.targets FOR SELECT USING (
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
-);
-CREATE POLICY "GMs can create targets for their team" ON public.targets FOR INSERT WITH CHECK (
-  gm_id = auth.uid() OR
-  EXISTS(SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'Admin')
+  gm_id = auth.uid()
 );
