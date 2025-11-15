@@ -118,14 +118,17 @@ export function TargetDialog({
               }
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
               required
-              disabled={!!target}
             >
               <option value="">Pilih Sales</option>
-              {salesList.map((sales) => (
-                <option key={sales.id} value={sales.id}>
-                  {sales.nama_lengkap}
-                </option>
-              ))}
+              {salesList && salesList.length > 0 ? (
+                salesList.map((sales) => (
+                  <option key={sales.id} value={sales.id}>
+                    {sales.nama_lengkap}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Tidak ada sales tersedia</option>
+              )}
             </select>
           </div>
 

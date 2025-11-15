@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { UserDialog } from "./user-dialog";
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { createClient } from "@/lib/supabase/client";
 
 export function UsersList({ initialUsers }: { initialUsers: any[] }) {
   const [users, setUsers] = useState(initialUsers);
@@ -33,8 +34,21 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
     setShowDialog(false);
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter(u => u.id !== userId));
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Yakin ingin menghapus user ini?")) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("users")
+        .delete()
+        .eq("id", userId);
+
+      if (error) throw error;
+      setUsers(users.filter(u => u.id !== userId));
+    } catch (err: any) {
+      alert("Gagal menghapus user: " + err.message);
+    }
   };
 
   return (
@@ -130,7 +144,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                           {user.status_aktif ? "Aktif" : "Nonaktif"}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-right">
+                      <td className="py-3 px-4 text-right gap-2 flex justify-end">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -141,6 +155,14 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                           className="text-blue-400 hover:text-blue-300"
                         >
                           Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </td>
                     </tr>

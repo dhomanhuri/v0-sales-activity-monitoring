@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ActivityDialog } from "./activity-dialog";
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { createClient } from "@/lib/supabase/client";
 
 const STATUS_COLORS: Record<string, string> = {
   'Planned': 'bg-blue-900 text-blue-200',
@@ -37,6 +38,23 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
       setActivities([updatedActivity, ...activities]);
     }
     setShowDialog(false);
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm("Yakin ingin menghapus aktivitas ini?")) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("activities")
+        .delete()
+        .eq("id", activityId);
+
+      if (error) throw error;
+      setActivities(activities.filter(a => a.id !== activityId));
+    } catch (err: any) {
+      alert("Gagal menghapus aktivitas: " + err.message);
+    }
   };
 
   return (
@@ -114,17 +132,27 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
                         {activity.catatan && <span>Catatan: {activity.catatan}</span>}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingActivity(activity);
-                        setShowDialog(true);
-                      }}
-                      className="text-blue-400 hover:text-blue-300"
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingActivity(activity);
+                          setShowDialog(true);
+                        }}
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteActivity(activity.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}

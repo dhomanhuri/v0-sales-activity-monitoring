@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TargetDialog } from "./target-dialog";
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 
 export function TargetsList({ initialTargets, userRole, userId }: any) {
   const [targets, setTargets] = useState(initialTargets);
@@ -16,19 +16,35 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
   const [salesList, setSalesList] = useState<any[]>([]);
 
   useEffect(() => {
-    // Load sales for this GM
     const loadSales = async () => {
-      const supabase = await import("@/lib/supabase/client").then(m => m.createClient());
-      const { data } = await supabase
-        .from("users")
-        .select("id, nama_lengkap")
-        .eq("gm_id", userId)
-        .eq("role", "Sales");
-      setSalesList(data || []);
+      try {
+        const supabase = (await import("@/lib/supabase/client")).createClient();
+        let query = supabase
+          .from("users")
+          .select("id, nama_lengkap")
+          .eq("role", "Sales");
+        
+        // If GM, only load their own sales team (sales where gm_id matches)
+        if (userRole === "GM") {
+          query = query.eq("gm_id", userId);
+        }
+        // If Admin, load all sales users
+        
+        const { data, error } = await query;
+        
+        if (error) {
+          console.log("[v0] Error loading sales:", error);
+        } else {
+          console.log("[v0] Loaded sales:", data);
+          setSalesList(data || []);
+        }
+      } catch (error) {
+        console.log("[v0] Failed to load sales list:", error);
+      }
     };
 
     loadSales();
-  }, [userId]);
+  }, [userId, userRole]);
 
   const filteredTargets = targets.filter((target) => {
     const matchesSearch =
@@ -45,6 +61,23 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
       setTargets([updatedTarget, ...targets]);
     }
     setShowDialog(false);
+  };
+
+  const handleDeleteTarget = async (targetId: string) => {
+    if (!confirm("Yakin ingin menghapus target ini?")) return;
+
+    try {
+      const supabase = (await import("@/lib/supabase/client")).createClient();
+      const { error } = await supabase
+        .from("targets")
+        .delete()
+        .eq("id", targetId);
+
+      if (error) throw error;
+      setTargets(targets.filter(t => t.id !== targetId));
+    } catch (err: any) {
+      alert("Gagal menghapus target: " + err.message);
+    }
   };
 
   const calculateProgress = (target: any) => {
@@ -121,17 +154,27 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
                           Periode: {target.periode_tahun}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingTarget(target);
-                          setShowDialog(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingTarget(target);
+                            setShowDialog(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTarget(target.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
