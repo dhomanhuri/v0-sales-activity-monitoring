@@ -28,9 +28,6 @@ export function TargetDialog({
   const [formData, setFormData] = useState({
     sales_id: "",
     periode_tahun: new Date().getFullYear(),
-    target_jumlah_lead: 0,
-    target_jumlah_proposal: 0,
-    target_jumlah_closing: 0,
     target_nilai_revenue: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -41,9 +38,6 @@ export function TargetDialog({
       setFormData({
         sales_id: target.sales_id,
         periode_tahun: target.periode_tahun,
-        target_jumlah_lead: target.target_jumlah_lead || 0,
-        target_jumlah_proposal: target.target_jumlah_proposal || 0,
-        target_jumlah_closing: target.target_jumlah_closing || 0,
         target_nilai_revenue: target.target_nilai_revenue || 0,
       });
     }
@@ -58,14 +52,10 @@ export function TargetDialog({
       const supabase = createClient();
 
       if (target) {
-        // Update existing target
         const { error: updateError } = await supabase
           .from("targets")
           .update({
             ...formData,
-            target_jumlah_lead: parseInt(formData.target_jumlah_lead.toString()),
-            target_jumlah_proposal: parseInt(formData.target_jumlah_proposal.toString()),
-            target_jumlah_closing: parseInt(formData.target_jumlah_closing.toString()),
             target_nilai_revenue: parseFloat(formData.target_nilai_revenue.toString()),
             updated_at: new Date().toISOString(),
           })
@@ -74,15 +64,11 @@ export function TargetDialog({
         if (updateError) throw updateError;
         onSave({ ...target, ...formData });
       } else {
-        // Create new target
         const { data: newTarget, error: insertError } = await supabase
           .from("targets")
           .insert({
             ...formData,
             gm_id: userId,
-            target_jumlah_lead: parseInt(formData.target_jumlah_lead.toString()),
-            target_jumlah_proposal: parseInt(formData.target_jumlah_proposal.toString()),
-            target_jumlah_closing: parseInt(formData.target_jumlah_closing.toString()),
             target_nilai_revenue: parseFloat(formData.target_nilai_revenue.toString()),
           })
           .select()
@@ -151,58 +137,18 @@ export function TargetDialog({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-slate-300">Target Jumlah Lead</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.target_jumlah_lead}
-                onChange={(e) =>
-                  setFormData({ ...formData, target_jumlah_lead: parseInt(e.target.value) || 0 })
-                }
-                className="bg-slate-700 border-slate-600 text-slate-50"
-              />
-            </div>
-            <div>
-              <Label className="text-slate-300">Target Jumlah Proposal</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.target_jumlah_proposal}
-                onChange={(e) =>
-                  setFormData({ ...formData, target_jumlah_proposal: parseInt(e.target.value) || 0 })
-                }
-                className="bg-slate-700 border-slate-600 text-slate-50"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-slate-300">Target Jumlah Closing</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.target_jumlah_closing}
-                onChange={(e) =>
-                  setFormData({ ...formData, target_jumlah_closing: parseInt(e.target.value) || 0 })
-                }
-                className="bg-slate-700 border-slate-600 text-slate-50"
-              />
-            </div>
-            <div>
-              <Label className="text-slate-300">Target Nilai Revenue (Rp)</Label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.target_nilai_revenue}
-                onChange={(e) =>
-                  setFormData({ ...formData, target_nilai_revenue: parseFloat(e.target.value) || 0 })
-                }
-                className="bg-slate-700 border-slate-600 text-slate-50"
-              />
-            </div>
+          <div>
+            <Label className="text-slate-300">Target Nilai Revenue (Rp)*</Label>
+            <Input
+              type="number"
+              min="0"
+              value={formData.target_nilai_revenue}
+              onChange={(e) =>
+                setFormData({ ...formData, target_nilai_revenue: parseFloat(e.target.value) || 0 })
+              }
+              className="bg-slate-700 border-slate-600 text-slate-50"
+              required
+            />
           </div>
 
           {error && <p className="text-red-400 text-sm">{error}</p>}

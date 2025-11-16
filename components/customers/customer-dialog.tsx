@@ -37,9 +37,12 @@ export function CustomerDialog({
     status_pipeline: "Lead",
     kota: "",
     catatan: "",
+    sales_id: userId, // add sales_id to form data
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [salesList, setSalesList] = useState<any[]>([]); // add state for sales list
+  const [loadingSales, setLoadingSales] = useState(false); // add loading state for sales
 
   useEffect(() => {
     if (customer) {
@@ -55,9 +58,39 @@ export function CustomerDialog({
         status_pipeline: customer.status_pipeline,
         kota: customer.kota || "",
         catatan: customer.catatan || "",
+        sales_id: customer.sales_id || userId, // set from customer
       });
     }
-  }, [customer]);
+  }, [customer, userId]);
+
+  useEffect(() => {
+    if (userRole === "GM" || userRole === "Admin") {
+      loadSalesList();
+    }
+  }, [userRole]);
+
+  const loadSalesList = async () => {
+    setLoadingSales(true);
+    try {
+      const supabase = createClient();
+      
+      let query = supabase
+        .from("users")
+        .select("id, nama_lengkap")
+        .eq("role", "Sales");
+
+      if (userRole === "GM") {
+        query = query.eq("gm_id", userId);
+      }
+
+      const { data } = await query;
+      setSalesList(data || []);
+    } catch (err) {
+      console.error("Error loading sales:", err);
+    } finally {
+      setLoadingSales(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +120,7 @@ export function CustomerDialog({
           .insert({
             ...formData,
             nilai_potensial: parseFloat(formData.nilai_potensial.toString()),
-            sales_id: userId,
+            sales_id: formData.sales_id,
           })
           .select()
           .single();
@@ -110,6 +143,28 @@ export function CustomerDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {(userRole === "GM" || userRole === "Admin") && (
+            <div>
+              <Label className="text-slate-300">Sales*</Label>
+              <select
+                value={formData.sales_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, sales_id: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
+                required
+                disabled={loadingSales}
+              >
+                <option value="">Pilih Sales</option>
+                {salesList.map((sales) => (
+                  <option key={sales.id} value={sales.id}>
+                    {sales.nama_lengkap}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-slate-300">Nama Perusahaan*</Label>

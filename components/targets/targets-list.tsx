@@ -81,11 +81,7 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
   };
 
   const calculateProgress = (target: any) => {
-    // This is simplified - full implementation would calculate from activities/customers
     return {
-      leads: Math.floor(Math.random() * (target.target_jumlah_lead || 10)),
-      proposals: Math.floor(Math.random() * (target.target_jumlah_proposal || 5)),
-      closings: Math.floor(Math.random() * (target.target_jumlah_closing || 3)),
       revenue: Math.floor(Math.random() * (target.target_nilai_revenue || 100000000)),
     };
   };
@@ -134,11 +130,7 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
           ) : (
             <div className="space-y-4">
               {filteredTargets.map((target) => {
-                const progress = calculateProgress(target);
-                const leadPercent = target.target_jumlah_lead ? (progress.leads / target.target_jumlah_lead * 100) : 0;
-                const proposalPercent = target.target_jumlah_proposal ? (progress.proposals / target.target_jumlah_proposal * 100) : 0;
-                const closingPercent = target.target_jumlah_closing ? (progress.closings / target.target_jumlah_closing * 100) : 0;
-                const revenuePercent = target.target_nilai_revenue ? (progress.revenue / target.target_nilai_revenue * 100) : 0;
+                const revenuePercent = target.target_nilai_revenue ? (target.actual_revenue / target.target_nilai_revenue * 100) : 0;
 
                 return (
                   <div
@@ -177,55 +169,17 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Lead</p>
-                        <div className="bg-slate-600 rounded-full h-2 mb-1">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full transition-all"
-                            style={{ width: `${Math.min(leadPercent, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-50">
-                          {progress.leads}/{target.target_jumlah_lead}
-                        </p>
+                    <div>
+                      <p className="text-xs text-slate-400 mb-2">Target Revenue</p>
+                      <div className="bg-slate-600 rounded-full h-2 mb-1">
+                        <div
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${Math.min(revenuePercent, 100)}%` }}
+                        />
                       </div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Proposal</p>
-                        <div className="bg-slate-600 rounded-full h-2 mb-1">
-                          <div
-                            className="bg-purple-500 h-2 rounded-full transition-all"
-                            style={{ width: `${Math.min(proposalPercent, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-50">
-                          {progress.proposals}/{target.target_jumlah_proposal}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Closing</p>
-                        <div className="bg-slate-600 rounded-full h-2 mb-1">
-                          <div
-                            className="bg-green-500 h-2 rounded-full transition-all"
-                            style={{ width: `${Math.min(closingPercent, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-50">
-                          {progress.closings}/{target.target_jumlah_closing}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2">Revenue</p>
-                        <div className="bg-slate-600 rounded-full h-2 mb-1">
-                          <div
-                            className="bg-orange-500 h-2 rounded-full transition-all"
-                            style={{ width: `${Math.min(revenuePercent, 100)}%` }}
-                          />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-50">
-                          {Math.floor(progress.revenue / 1000000)}M
-                        </p>
-                      </div>
+                      <p className="text-sm font-semibold text-slate-50">
+                        Rp {(target.target_nilai_revenue || 0).toLocaleString('id-ID')}
+                      </p>
                     </div>
                   </div>
                 );
