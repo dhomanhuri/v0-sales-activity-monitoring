@@ -20,10 +20,10 @@ export function CustomerDetailModal({ customer, onClose }: any) {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const supabase = await createClient();
+        const supabase = createClient();
         const { data } = await supabase
-          .from("sales_activities")
-          .select("*, activity_types:activity_type_id(nama_aktivitas)")
+          .from("activities")
+          .select("*, activity_types:jenis_aktivitas_id(nama_aktivitas)")
           .eq("customer_id", customer.id)
           .order("tanggal_aktivitas", { ascending: false });
         
@@ -94,7 +94,7 @@ export function CustomerDetailModal({ customer, onClose }: any) {
             </div>
             <div className="col-span-2">
               <label className="text-sm text-slate-400">Sumber Lead</label>
-              <p className="text-slate-50">{customer.sumber_lead}</p>
+              <p className="text-slate-50">{customer.asal_lead}</p>
             </div>
           </div>
 

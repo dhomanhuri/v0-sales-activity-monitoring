@@ -100,6 +100,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
           }}
           onSave={handleActivitySaved}
           userId={userId}
+          userRole={userRole}
         />
       )}
 

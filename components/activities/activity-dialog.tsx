@@ -17,11 +17,13 @@ export function ActivityDialog({
   onClose,
   onSave,
   userId,
+  userRole,
 }: {
   activity: any | null;
   onClose: () => void;
   onSave: (activity: any) => void;
   userId: string;
+  userRole: string;
 }) {
   const [formData, setFormData] = useState({
     customer_id: "",
@@ -32,6 +34,8 @@ export function ActivityDialog({
     next_step: "",
     lampiran_link: "",
   });
+  const [selectedSalesId, setSelectedSalesId] = useState<string>("");
+  const [salesList, setSalesList] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [activityTypes, setActivityTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +45,33 @@ export function ActivityDialog({
     const loadData = async () => {
       const supabase = createClient();
 
-      // Load customers for this sales
-      const { data: customersData } = await supabase
-        .from("customers")
-        .select("id, nama_perusahaan")
-        .eq("sales_id", userId);
-      setCustomers(customersData || []);
+      // If GM/Admin: load selectable sales list. If Sales: set selected to self.
+      if (userRole === "GM") {
+        const { data: gmSales } = await supabase
+          .from("users")
+          .select("id, nama_lengkap")
+          .eq("role", "Sales")
+          .eq("status_aktif", true)
+          .eq("gm_id", userId);
+        setSalesList(gmSales || []);
+        // If editing, prefer existing activity's sales; else none selected initially
+        if (!activity) {
+          setSelectedSalesId("");
+        }
+      } else if (userRole === "Admin") {
+        const { data: allSales } = await supabase
+          .from("users")
+          .select("id, nama_lengkap")
+          .eq("role", "Sales")
+          .eq("status_aktif", true);
+        setSalesList(allSales || []);
+        if (!activity) {
+          setSelectedSalesId("");
+        }
+      } else {
+        // Sales role
+        setSelectedSalesId(userId);
+      }
 
       // Load activity types
       const { data: typesData } = await supabase
@@ -67,8 +92,29 @@ export function ActivityDialog({
         next_step: activity.next_step || "",
         lampiran_link: activity.lampiran_link || "",
       });
+      // Ensure selected sales for editing mode (if present on record)
+      if (activity.sales_id) {
+        setSelectedSalesId(activity.sales_id);
+      }
     }
-  }, [activity, userId]);
+  }, [activity, userId, userRole]);
+
+  // Load customers whenever selectedSalesId changes
+  useEffect(() => {
+    const loadCustomers = async () => {
+      if (!selectedSalesId) {
+        setCustomers([]);
+        return;
+      }
+      const supabase = createClient();
+      const { data: customersData } = await supabase
+        .from("customers")
+        .select("id, nama_perusahaan")
+        .eq("sales_id", selectedSalesId);
+      setCustomers(customersData || []);
+    };
+    loadCustomers();
+  }, [selectedSalesId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,19 +130,20 @@ export function ActivityDialog({
           .from("activities")
           .update({
             ...formData,
+            sales_id: selectedSalesId || userId,
             updated_at: new Date().toISOString(),
           })
           .eq("id", activity.id);
 
         if (updateError) throw updateError;
-        onSave({ ...activity, ...formData });
+        onSave({ ...activity, ...formData, sales_id: selectedSalesId || userId });
       } else {
         // Create new activity
         const { data: newActivity, error: insertError } = await supabase
           .from("activities")
           .insert({
             ...formData,
-            sales_id: userId,
+            sales_id: selectedSalesId || userId,
           })
           .select(`
             *,
@@ -123,6 +170,28 @@ export function ActivityDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {(userRole === "GM" || userRole === "Admin") && (
+            <div>
+              <Label className="text-slate-300">Sales*</Label>
+              <select
+                value={selectedSalesId}
+                onChange={(e) => setSelectedSalesId(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
+                required
+              >
+                <option value="">Pilih Sales</option>
+                {salesList && salesList.length > 0 ? (
+                  salesList.map((sales) => (
+                    <option key={sales.id} value={sales.id}>
+                      {sales.nama_lengkap}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Tidak ada sales tersedia</option>
+                )}
+              </select>
+            </div>
+          )}
           <div>
             <Label className="text-slate-300">Customer*</Label>
             <select

@@ -97,7 +97,21 @@ export function UserDialog({
 
         if (signUpError) throw signUpError;
 
-        // User profile will be created via trigger
+        // Ensure profile row is completed with gm_id and status_aktif
+        if (signUpData.user?.id) {
+          const { error: profileUpdateError } = await supabase
+            .from("users")
+            .update({
+              nama_lengkap: formData.nama_lengkap,
+              role: formData.role,
+              gm_id: formData.role === "Sales" ? (formData.gm_id || null) : null,
+              status_aktif: formData.status_aktif,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", signUpData.user.id);
+          if (profileUpdateError) throw profileUpdateError;
+        }
+
         onSave({
           id: signUpData.user?.id,
           ...formData,

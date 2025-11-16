@@ -98,16 +98,18 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
             className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
           />
         </div>
-        <Button
-          onClick={() => {
-            setEditingTarget(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah Target
-        </Button>
+        {userRole !== "Sales" && (
+          <Button
+            onClick={() => {
+              setEditingTarget(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Tambah Target
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -130,7 +132,9 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
           ) : (
             <div className="space-y-4">
               {filteredTargets.map((target) => {
-                const revenuePercent = target.target_nilai_revenue ? (target.actual_revenue / target.target_nilai_revenue * 100) : 0;
+                const actualRevenue = Number(target.actual_revenue || 0);
+                const targetRevenue = Number(target.target_nilai_revenue || 0);
+                const revenuePercent = targetRevenue > 0 ? (actualRevenue / targetRevenue * 100) : 0;
 
                 return (
                   <div
@@ -147,25 +151,29 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingTarget(target);
-                            setShowDialog(true);
-                          }}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteTarget(target.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {userRole !== "Sales" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingTarget(target);
+                                setShowDialog(true);
+                              }}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTarget(target.id)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -177,8 +185,16 @@ export function TargetsList({ initialTargets, userRole, userId }: any) {
                           style={{ width: `${Math.min(revenuePercent, 100)}%` }}
                         />
                       </div>
-                      <p className="text-sm font-semibold text-slate-50">
-                        Rp {(target.target_nilai_revenue || 0).toLocaleString('id-ID')}
+                      <div className="flex justify-between text-sm mt-1">
+                        <p className="text-slate-300">
+                          Achievement: <span className="font-semibold text-slate-50">Rp {actualRevenue.toLocaleString('id-ID')}</span>
+                        </p>
+                        <p className="text-slate-400">
+                          {revenuePercent.toFixed(0)}%
+                        </p>
+                      </div>
+                      <p className="text-sm text-slate-400 mt-1">
+                        Target: <span className="font-semibold text-slate-50">Rp {targetRevenue.toLocaleString('id-ID')}</span>
                       </p>
                     </div>
                   </div>

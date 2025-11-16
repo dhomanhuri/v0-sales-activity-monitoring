@@ -178,14 +178,22 @@ export function CustomerDialog({
               />
             </div>
             <div>
-              <Label className="text-slate-300">Industri</Label>
-              <Input
+              <Label className="text-slate-300">Industri*</Label>
+              <select
                 value={formData.industri}
                 onChange={(e) =>
                   setFormData({ ...formData, industri: e.target.value })
                 }
-                className="bg-slate-700 border-slate-600 text-slate-50"
-              />
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
+                required
+              >
+                <option value="">Pilih Industri</option>
+                <option value="Government">Government</option>
+                <option value="FSI">FSI</option>
+                <option value="Energy">Energy</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Others">Others</option>
+              </select>
             </div>
           </div>
 
