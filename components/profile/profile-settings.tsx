@@ -33,9 +33,9 @@ export function ProfileSettings({ user, userEmail }: any) {
         .eq("id", user.id);
 
       if (updateError) throw updateError;
-      setSuccess("Profil berhasil diperbarui");
+      setSuccess("Profile updated successfully");
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +48,7 @@ export function ProfileSettings({ user, userEmail }: any) {
     setSuccess("");
 
     if (password !== passwordConfirm) {
-      setError("Kata sandi tidak cocok");
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
@@ -61,11 +61,11 @@ export function ProfileSettings({ user, userEmail }: any) {
       });
 
       if (updateError) throw updateError;
-      setSuccess("Kata sandi berhasil diperbarui");
+      setSuccess("Password updated successfully");
       setPassword("");
       setPasswordConfirm("");
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -75,12 +75,12 @@ export function ProfileSettings({ user, userEmail }: any) {
     <div className="space-y-6 max-w-2xl">
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Informasi Profil</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Profile Information</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div>
-              <Label className="text-slate-700 dark:text-slate-300">Nama Lengkap</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Full Name</Label>
               <Input
                 value={namaLengkap}
                 onChange={(e) => setNamaLengkap(e.target.value)}
@@ -111,7 +111,7 @@ export function ProfileSettings({ user, userEmail }: any) {
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+              {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </form>
         </CardContent>
@@ -119,12 +119,12 @@ export function ProfileSettings({ user, userEmail }: any) {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Ubah Kata Sandi</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Change Password</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div>
-              <Label className="text-slate-700 dark:text-slate-300">Kata Sandi Baru</Label>
+              <Label className="text-slate-700 dark:text-slate-300">New Password</Label>
               <Input
                 type="password"
                 value={password}
@@ -133,7 +133,7 @@ export function ProfileSettings({ user, userEmail }: any) {
               />
             </div>
             <div>
-              <Label className="text-slate-700 dark:text-slate-300">Konfirmasi Kata Sandi</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Confirm Password</Label>
               <Input
                 type="password"
                 value={passwordConfirm}
@@ -148,7 +148,7 @@ export function ProfileSettings({ user, userEmail }: any) {
               disabled={isLoading || !password}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Memperbarui..." : "Perbarui Kata Sandi"}
+              {isLoading ? "Updating..." : "Update Password"}
             </Button>
           </form>
         </CardContent>

@@ -38,7 +38,7 @@ export default function LoginPage() {
       router.refresh();
     } catch (error: unknown) {
       setError(
-        error instanceof Error ? error.message : "Terjadi kesalahan saat login"
+        error instanceof Error ? error.message : "An error occurred during login"
       );
     } finally {
       setIsLoading(false);
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 Campaign Monitoring
               </CardTitle>
               <CardDescription className="text-slate-600 dark:text-slate-300">
-                Sistem Monitoring Aktivitas Penjualan
+                Sales Activity Monitoring System
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -95,7 +95,7 @@ export default function LoginPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="password" className="text-slate-700 dark:text-slate-200">
-                      Kata Sandi
+                      Password
                     </Label>
                     <Input
                       id="password"
@@ -116,12 +116,12 @@ export default function LoginPage() {
                     className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Masuk..." : "Masuk"}
+                    {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
               </form>
               <div className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
-                Hubungi admin untuk membuat akun
+                Contact admin to create an account
               </div>
             </CardContent>
           </Card>

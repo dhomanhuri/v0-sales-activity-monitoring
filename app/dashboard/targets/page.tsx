@@ -126,8 +126,8 @@ export default async function TargetsPage() {
   return (
     <div className="p-8 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Target Penjualan</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">Ringkasan target, potential, dan achievement revenue dari semua campaign per sales</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Sales Targets</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Summary of target, potential, and achievement revenue from all campaigns per sales</p>
       </div>
 
       <TargetsList initialTargets={salesTargets} userRole={userProfile?.role} userId={user.id} />

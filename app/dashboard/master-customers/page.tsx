@@ -35,7 +35,7 @@ export default async function MasterCustomersPage() {
     <div className="p-8 min-h-screen space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Master Customer</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">Kelola data master customer</p>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Manage master customer data</p>
       </div>
 
       <MasterCustomersList initialCustomers={customers || []} />

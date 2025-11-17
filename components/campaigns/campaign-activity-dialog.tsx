@@ -66,7 +66,7 @@ export function CampaignActivityDialog({
 
     // Validate: Closing must have potential_value
     if (formData.jenis_aktivitas === "Closing" && (!formData.potential_value || formData.potential_value <= 0)) {
-      setError("Potential Value wajib diisi untuk aktivitas Closing");
+      setError("Potential Value is required for Closing activity");
       setIsLoading(false);
       return;
     }
@@ -111,7 +111,7 @@ export function CampaignActivityDialog({
         onSave(newActivity);
       }
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +121,7 @@ export function CampaignActivityDialog({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50">
         <DialogHeader>
-          <DialogTitle className="text-slate-900 dark:text-slate-50">{activity ? "Edit Aktivitas" : "Tambah Aktivitas Baru"}</DialogTitle>
+          <DialogTitle className="text-slate-900 dark:text-slate-50">{activity ? "Edit Activity" : "Add New Activity"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,7 +136,7 @@ export function CampaignActivityDialog({
                 className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
                 required
               >
-                <option value="">Pilih Customer</option>
+                <option value="">Select Customer</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name}
@@ -145,7 +145,7 @@ export function CampaignActivityDialog({
               </select>
             </div>
             <div>
-              <Label className="text-slate-700 dark:text-slate-300">Aktivitas*</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Activity*</Label>
               <select
                 value={formData.jenis_aktivitas}
                 onChange={(e) =>
@@ -166,7 +166,7 @@ export function CampaignActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-700 dark:text-slate-300">Tanggal Aktivitas*</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Activity Date*</Label>
             <Input
               type="date"
               value={formData.tanggal_aktivitas}
@@ -187,19 +187,19 @@ export function CampaignActivityDialog({
                 setFormData({ ...formData, pic: e.target.value })
               }
               className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
-              placeholder="Masukkan nama PIC..."
+              placeholder="Enter PIC name..."
             />
           </div>
 
           <div>
-            <Label className="text-slate-700 dark:text-slate-300">Keterangan</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Description</Label>
             <textarea
               value={formData.keterangan}
               onChange={(e) =>
                 setFormData({ ...formData, keterangan: e.target.value })
               }
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50 min-h-24"
-              placeholder="Masukkan keterangan aktivitas..."
+              placeholder="Enter activity description..."
             />
           </div>
 
@@ -220,7 +220,7 @@ export function CampaignActivityDialog({
             />
             {formData.jenis_aktivitas === "Closing" && (
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                Nilai ini akan menjadi Achievement Revenue pada campaign
+                This value will become Achievement Revenue for the campaign
               </p>
             )}
           </div>
@@ -234,14 +234,14 @@ export function CampaignActivityDialog({
               onClick={onClose}
               className="border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

@@ -29,7 +29,7 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
   };
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm("Yakin ingin menghapus campaign ini?")) return;
+    if (!confirm("Are you sure you want to delete this campaign?")) return;
 
     try {
       const supabase = createClient();
@@ -41,7 +41,7 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
       if (error) throw error;
       setCampaigns(campaigns.filter(c => c.id !== campaignId));
     } catch (err: any) {
-      alert("Gagal menghapus campaign: " + err.message);
+      alert("Failed to delete campaign: " + err.message);
     }
   };
 
@@ -51,7 +51,7 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
           <Input
-            placeholder="Cari campaign..."
+            placeholder="Search campaign..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
@@ -65,7 +65,7 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah Campaign
+          Add Campaign
         </Button>
       </div>
 
@@ -83,7 +83,7 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardContent className="pt-6">
           {filteredCampaigns.length === 0 ? (
-            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada campaign ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">No campaigns found</p>
           ) : (
             <div className="space-y-2">
               {filteredCampaigns.map((campaign) => (

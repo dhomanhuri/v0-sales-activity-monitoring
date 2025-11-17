@@ -115,7 +115,7 @@ export function CampaignDialog({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-slate-900 dark:text-slate-50">{campaign ? "Edit Campaign" : "Tambah Campaign Baru"}</DialogTitle>
+          <DialogTitle className="text-slate-900 dark:text-slate-50">{campaign ? "Edit Campaign" : "Add New Campaign"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,7 +129,7 @@ export function CampaignDialog({
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
               required
             >
-              <option value="">Pilih Campaign</option>
+              <option value="">Select Campaign</option>
               {masterCampaigns.map((camp) => (
                 <option key={camp.id} value={camp.id}>
                   {camp.name}
@@ -161,14 +161,14 @@ export function CampaignDialog({
               onClick={onClose}
               className="border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

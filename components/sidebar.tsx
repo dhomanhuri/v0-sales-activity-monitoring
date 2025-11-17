@@ -12,11 +12,11 @@ const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "AM", href: "/dashboard/campaigns", icon: Megaphone },
   { label: "Target", href: "/dashboard/targets", icon: Target },
-  { label: "Pengaturan Profil", href: "/dashboard/profile", icon: Settings },
+  { label: "Profile Settings", href: "/dashboard/profile", icon: Settings },
 ];
 
 const adminMenuItems = [
-  { label: "Manajemen User", href: "/dashboard/users", icon: Users },
+  { label: "User Management", href: "/dashboard/users", icon: Users },
   { label: "Master Customer", href: "/dashboard/master-customers", icon: Building2 },
   { label: "Master Campaign", href: "/dashboard/master-campaigns", icon: Megaphone },
 ];
@@ -100,7 +100,7 @@ export function Sidebar({ user }: { user: any }) {
           className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-slate-700 hover:text-orange-600 dark:hover:text-white transition-colors"
         >
           <LogOut className="h-5 w-5" />
-          Keluar
+          Logout
         </button>
       </div>
     </div>

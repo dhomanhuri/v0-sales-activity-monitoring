@@ -30,7 +30,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     
     for (const activity of sortedActivities) {
       const customerId = activity.customer_id || 'no-customer';
-      const customerName = (activity.master_customers as any)?.name || 'Tanpa Customer';
+      const customerName = (activity.master_customers as any)?.name || 'No Customer';
       
       if (!groups.has(customerId)) {
         groups.set(customerId, []);
@@ -40,7 +40,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     
     return Array.from(groups.entries()).map(([customerId, activities]) => ({
       customerId,
-      customerName: activities[0]?.master_customers?.name || 'Tanpa Customer',
+      customerName: activities[0]?.master_customers?.name || 'No Customer',
       activities,
     }));
   }, [activities]);
@@ -68,7 +68,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   };
 
   const handleDeleteActivity = async (activityId: string) => {
-    if (!confirm("Yakin ingin menghapus aktivitas ini?")) return;
+    if (!confirm("Are you sure you want to delete this activity?")) return;
 
     try {
       const supabase = createClient();
@@ -80,7 +80,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
       if (error) throw error;
       setActivities(activities.filter((a: any) => a.id !== activityId));
     } catch (err: any) {
-      alert("Gagal menghapus aktivitas: " + err.message);
+      alert("Failed to delete activity: " + err.message);
     }
   };
 
@@ -135,7 +135,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Kembali
+          Back
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
@@ -206,7 +206,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-slate-900 dark:text-slate-50">Aktivitas Campaign</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Campaign Activities</CardTitle>
           {canEdit && (
             <Button
               onClick={() => {
@@ -216,7 +216,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
               className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
             >
               <Plus className="h-4 w-4" />
-              Tambah Aktivitas
+              Add Activity
             </Button>
           )}
         </CardHeader>
@@ -234,7 +234,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           )}
 
           {activities.length === 0 ? (
-            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada aktivitas ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">No activities found</p>
           ) : (
             <div className="space-y-3">
               {groupedActivities.map((group) => {
@@ -267,7 +267,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                             {group.customerName}
                           </h3>
                           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                            {activityCount} aktivitas
+                            {activityCount} {activityCount === 1 ? 'activity' : 'activities'}
                             {totalPotential > 0 && (
                               <> • Total Potential: Rp {totalPotential.toLocaleString('id-ID')}</>
                             )}
@@ -308,7 +308,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                                     </p>
                                   )}
                                   <p className="text-xs text-slate-600 dark:text-slate-400">
-                                    Tanggal: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('id-ID', {
+                                    Date: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('en-US', {
                                       weekday: 'long',
                                       year: 'numeric',
                                       month: 'long',

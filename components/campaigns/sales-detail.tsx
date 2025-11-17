@@ -25,7 +25,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
   };
 
   const handleDeleteCampaign = async (campaignId: string) => {
-    if (!confirm("Yakin ingin menghapus campaign ini?")) return;
+    if (!confirm("Are you sure you want to delete this campaign?")) return;
 
     try {
       const supabase = createClient();
@@ -37,7 +37,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
       if (error) throw error;
       setCampaigns(campaigns.filter(c => c.id !== campaignId));
     } catch (err: any) {
-      alert("Gagal menghapus campaign: " + err.message);
+      alert("Failed to delete campaign: " + err.message);
     }
   };
 
@@ -51,10 +51,10 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
             className="mb-4 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali
+            Back
           </Button>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Campaign - {sales.nama_lengkap}</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">Kelola campaign untuk sales ini</p>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Manage campaigns for this sales</p>
         </div>
         <Button
           onClick={() => {
@@ -64,7 +64,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
           className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah Campaign
+          Add Campaign
         </Button>
       </div>
 
@@ -84,11 +84,11 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Daftar Campaign</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Campaign List</CardTitle>
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada campaign ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">No campaigns found</p>
           ) : (
             <div className="space-y-2">
               {campaigns.map((campaign: any) => (

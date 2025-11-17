@@ -35,7 +35,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Yakin ingin menghapus user ini?")) return;
+    if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
       const supabase = createClient();
@@ -47,7 +47,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
       if (error) throw error;
       setUsers(users.filter(u => u.id !== userId));
     } catch (err: any) {
-      alert("Gagal menghapus user: " + err.message);
+      alert("Failed to delete user: " + err.message);
     }
   };
 
@@ -57,7 +57,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
           <Input
-            placeholder="Cari user..."
+            placeholder="Search user..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
@@ -68,7 +68,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
           onChange={(e) => setRoleFilter(e.target.value)}
           className="px-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
         >
-          <option value="">Semua Role</option>
+          <option value="">All Roles</option>
           <option value="Admin">Admin</option>
           <option value="GM">General Manager</option>
           <option value="Sales">Sales</option>
@@ -81,7 +81,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah User
+          Add User
         </Button>
       </div>
 
@@ -99,17 +99,17 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardContent className="pt-6">
           {filteredUsers.length === 0 ? (
-            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada user ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">No users found</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Nama</th>
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Name</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Email</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Role</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Status</th>
-                    <th className="text-right py-3 px-4 text-slate-700 dark:text-slate-300">Aksi</th>
+                    <th className="text-right py-3 px-4 text-slate-700 dark:text-slate-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,7 +141,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                               : "bg-gray-900 text-gray-200"
                           }
                         >
-                          {user.status_aktif ? "Aktif" : "Nonaktif"}
+                          {user.status_aktif ? "Active" : "Inactive"}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-right gap-2 flex justify-end">

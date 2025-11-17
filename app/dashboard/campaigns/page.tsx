@@ -42,7 +42,7 @@ export default async function CampaignsPage() {
     <div className="p-8 min-h-screen space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">AM</h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">Pilih sales untuk melihat dan mengelola campaign</p>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Select sales to view and manage campaigns</p>
       </div>
 
       <SalesList initialSales={sales || []} />

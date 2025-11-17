@@ -118,7 +118,7 @@ export function UserDialog({
         });
       }
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -126,34 +126,34 @@ export function UserDialog({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-50">
+      <DialogContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50">
         <DialogHeader>
-          <DialogTitle>{user ? "Edit User" : "Tambah User Baru"}</DialogTitle>
+          <DialogTitle className="text-slate-900 dark:text-slate-50">{user ? "Edit User" : "Add New User"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="text-slate-300">Nama Lengkap</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Full Name</Label>
             <Input
               value={formData.nama_lengkap}
               onChange={(e) =>
                 setFormData({ ...formData, nama_lengkap: e.target.value })
               }
-              className="bg-slate-700 border-slate-600 text-slate-50"
+              className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               required
             />
           </div>
 
           {!user && (
             <div>
-              <Label className="text-slate-300">Email</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Email</Label>
               <Input
                 type="email"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="bg-slate-700 border-slate-600 text-slate-50"
+                className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
                 required
               />
             </div>
@@ -161,27 +161,27 @@ export function UserDialog({
 
           {!user && (
             <div>
-              <Label className="text-slate-300">Kata Sandi</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Password</Label>
               <Input
                 type="password"
-                placeholder="Biarkan kosong untuk generate otomatis"
+                placeholder="Leave empty to auto-generate"
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
-                className="bg-slate-700 border-slate-600 text-slate-50"
+                className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               />
             </div>
           )}
 
           <div>
-            <Label className="text-slate-300">Role</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Role</Label>
             <select
               value={formData.role}
               onChange={(e) =>
                 setFormData({ ...formData, role: e.target.value })
               }
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
             >
               <option value="Sales">Sales</option>
               <option value="GM">General Manager</option>
@@ -191,15 +191,15 @@ export function UserDialog({
 
           {formData.role === "Sales" && (
             <div>
-              <Label className="text-slate-300">Manager (GM)</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Manager (GM)</Label>
               <select
                 value={formData.gm_id}
                 onChange={(e) =>
                   setFormData({ ...formData, gm_id: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
+                className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
               >
-                <option value="">Pilih Manager</option>
+                <option value="">Select Manager</option>
                 {managers.map((manager) => (
                   <option key={manager.id} value={manager.id}>
                     {manager.nama_lengkap}
@@ -219,8 +219,8 @@ export function UserDialog({
               }
               className="rounded"
             />
-            <Label htmlFor="status_aktif" className="text-slate-300">
-              Status Aktif
+            <Label htmlFor="status_aktif" className="text-slate-700 dark:text-slate-300">
+              Active Status
             </Label>
           </div>
 
@@ -231,16 +231,16 @@ export function UserDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-slate-600 text-slate-300"
+              className="border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

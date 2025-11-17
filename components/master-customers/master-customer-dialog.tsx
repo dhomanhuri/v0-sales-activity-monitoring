@@ -78,7 +78,7 @@ export function MasterCustomerDialog({
       }
     } catch (err: any) {
       console.error("Error in handleSubmit:", err);
-      setError(err.message || "Terjadi kesalahan. Pastikan tabel master_customers sudah dibuat di database.");
+      setError(err.message || "An error occurred. Please ensure the master_customers table has been created in the database.");
     } finally {
       setIsLoading(false);
     }
@@ -86,32 +86,32 @@ export function MasterCustomerDialog({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-800 border-slate-700 text-slate-50">
+      <DialogContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50">
         <DialogHeader>
-          <DialogTitle>{customer ? "Edit Customer" : "Tambah Customer Baru"}</DialogTitle>
+          <DialogTitle className="text-slate-900 dark:text-slate-50">{customer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label className="text-slate-300">Nama Customer*</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Customer Name*</Label>
             <Input
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="bg-slate-700 border-slate-600 text-slate-50"
+              className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               required
             />
           </div>
 
           <div>
-            <Label className="text-slate-300">Deskripsi</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Description</Label>
             <textarea
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50 min-h-24"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50 min-h-24"
             />
           </div>
 
@@ -122,16 +122,16 @@ export function MasterCustomerDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="border-slate-600 text-slate-300"
+              className="border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>
