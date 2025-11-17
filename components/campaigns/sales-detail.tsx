@@ -1,28 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, Edit, Eye } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, ArrowLeft } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from 'next/navigation';
 import { CampaignDialog } from "./campaign-dialog";
 
-export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
+export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) {
   const [campaigns, setCampaigns] = useState(initialCampaigns);
-  const [search, setSearch] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const router = useRouter();
-
-  const filteredCampaigns = campaigns.filter((campaign) => {
-    const matchesSearch =
-      (campaign.master_customers as any)?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      (campaign.master_campaigns as any)?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      (campaign.users as any)?.nama_lengkap?.toLowerCase().includes(search.toLowerCase());
-    return matchesSearch;
-  });
 
   const handleCampaignSaved = (updatedCampaign: any) => {
     if (editingCampaign) {
@@ -52,23 +42,26 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
-          <Input
-            placeholder="Cari campaign..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
-          />
+    <div className="p-8 min-h-screen space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/dashboard/campaigns")}
+            className="mb-4 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Kembali
+          </Button>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Campaign - {sales.nama_lengkap}</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Kelola campaign untuk sales ini</p>
         </div>
         <Button
           onClick={() => {
             setEditingCampaign(null);
             setShowDialog(true);
           }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
+          className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
         >
           <Plus className="h-4 w-4" />
           Tambah Campaign
@@ -78,6 +71,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
       {showDialog && (
         <CampaignDialog
           campaign={editingCampaign}
+          salesId={sales.id}
           onClose={() => {
             setShowDialog(false);
             setEditingCampaign(null);
@@ -89,12 +83,15 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
       )}
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardContent className="pt-6">
-          {filteredCampaigns.length === 0 ? (
+        <CardHeader>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Daftar Campaign</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {campaigns.length === 0 ? (
             <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada campaign ditemukan</p>
           ) : (
             <div className="space-y-2">
-              {filteredCampaigns.map((campaign) => (
+              {campaigns.map((campaign: any) => (
                 <div
                   key={campaign.id}
                   className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
@@ -102,10 +99,9 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-2">
-                        {(campaign.master_customers as any)?.name} - {(campaign.master_campaigns as any)?.name}
+                        {(campaign.master_campaigns as any)?.name}
                       </h3>
                       <div className="flex gap-4 text-sm text-slate-600 dark:text-slate-400">
-                        <span>Sales: {(campaign.users as any)?.nama_lengkap}</span>
                         {campaign.target_revenue && (
                           <span>Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}</span>
                         )}
@@ -116,7 +112,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                         variant="ghost"
                         size="sm"
                         onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
-                        className="text-blue-400 hover:text-blue-300"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -129,7 +125,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                               setEditingCampaign(campaign);
                               setShowDialog(true);
                             }}
-                            className="text-blue-400 hover:text-blue-300"
+                            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -137,7 +133,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteCampaign(campaign.id)}
-                            className="text-red-400 hover:text-red-300"
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

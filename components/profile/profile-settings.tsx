@@ -73,35 +73,35 @@ export function ProfileSettings({ user, userEmail }: any) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Informasi Profil</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Informasi Profil</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div>
-              <Label className="text-slate-300">Nama Lengkap</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Nama Lengkap</Label>
               <Input
                 value={namaLengkap}
                 onChange={(e) => setNamaLengkap(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-slate-50"
+                className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               />
             </div>
             <div>
-              <Label className="text-slate-300">Email</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Email</Label>
               <Input
                 type="email"
                 value={userEmail}
                 disabled
-                className="bg-slate-700 border-slate-600 text-slate-400"
+                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400"
               />
             </div>
             <div>
-              <Label className="text-slate-300">Role</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Role</Label>
               <Input
                 value={user?.role}
                 disabled
-                className="bg-slate-700 border-slate-600 text-slate-400"
+                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400"
               />
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -117,28 +117,28 @@ export function ProfileSettings({ user, userEmail }: any) {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Ubah Kata Sandi</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Ubah Kata Sandi</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div>
-              <Label className="text-slate-300">Kata Sandi Baru</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Kata Sandi Baru</Label>
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-slate-50"
+                className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               />
             </div>
             <div>
-              <Label className="text-slate-300">Konfirmasi Kata Sandi</Label>
+              <Label className="text-slate-700 dark:text-slate-300">Konfirmasi Kata Sandi</Label>
               <Input
                 type="password"
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-slate-50"
+                className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               />
             </div>
             {error && <p className="text-red-400 text-sm">{error}</p>}

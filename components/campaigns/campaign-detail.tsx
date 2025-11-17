@@ -43,10 +43,37 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     }
   };
 
-  // Potential Revenue adalah nilai dari aktivitas terakhir berdasarkan tanggal_aktivitas
-  // Activities sudah diurutkan berdasarkan tanggal_aktivitas descending
+  // Potential Revenue adalah akumulasi potential value terakhir tiap customer
+  // Group activities by customer_id, ambil yang terakhir per customer, lalu jumlahkan
+  const potentialRevenue = (() => {
+    const customerLatestActivity = new Map<string, any>();
+    
+    // Sort activities by tanggal_aktivitas descending
+    const sortedActivities = [...activities].sort((a: any, b: any) => {
+      const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+      const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+      return dateB - dateA;
+    });
+    
+    // For each activity, keep only the latest one per customer
+    for (const activity of sortedActivities) {
+      const customerId = activity.customer_id;
+      if (customerId && !customerLatestActivity.has(customerId)) {
+        customerLatestActivity.set(customerId, activity);
+      }
+    }
+    
+    // Sum all potential_value from latest activities per customer
+    let total = 0;
+    for (const activity of customerLatestActivity.values()) {
+      total += parseFloat(activity.potential_value) || 0;
+    }
+    
+    return total;
+  })();
+  
+  // Get latest activity for display (first activity in sorted list)
   const latestActivity = activities.length > 0 ? activities[0] : null;
-  const potentialRevenue = latestActivity ? (parseFloat(latestActivity.potential_value) || 0) : 0;
 
   // Achievement Revenue adalah total dari semua aktivitas Closing
   const achievementRevenue = activities
@@ -56,78 +83,79 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     );
 
   return (
-    <div className="p-8 bg-slate-900 min-h-screen space-y-6">
+    <div className="p-8 min-h-screen space-y-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => router.push("/dashboard/campaigns")}
-          className="text-slate-300 hover:text-slate-50"
+          onClick={() => {
+            // Get sales_id from campaign to go back to sales detail
+            router.push(`/dashboard/campaigns/sales/${campaign.sales_id}`);
+          }}
+          className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
           Kembali
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-slate-50">
-            {(campaign.master_customers as any)?.name} - {(campaign.master_campaigns as any)?.name}
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+            {(campaign.master_campaigns as any)?.name}
           </h1>
-          <p className="text-slate-400 mt-2">
-            Sales: {(campaign.users as any)?.nama_lengkap}
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            
             {campaign.target_revenue && (
-              <> | Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}</>
+              <>  Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}</>
             )}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle className="text-slate-50 text-sm">Target Revenue</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Target Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-50">
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
               Rp {(campaign.target_revenue || 0).toLocaleString('id-ID')}
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle className="text-slate-50 text-sm">Potential Revenue ({latestActivity?.jenis_aktivitas})</CardTitle>
-            {/* {latestActivity && (
-              <p className="text-xs text-slate-400 mt-1">
-                Dari: {latestActivity.jenis_aktivitas}
-              </p>
-            )} */}
+            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Potential Revenue</CardTitle>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+              Akumulasi potential value terakhir tiap customer
+            </p>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-400">
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               Rp {potentialRevenue.toLocaleString('id-ID')}
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle className="text-slate-50 text-sm">Achievement Revenue</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Achievement Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-400">
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
               Rp {achievementRevenue.toLocaleString('id-ID')}
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
-            <CardTitle className="text-slate-50 text-sm">Progress</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-50">
+            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
               {campaign.target_revenue ? 
                 `${((achievementRevenue / campaign.target_revenue) * 100).toFixed(1)}%` : 
                 'N/A'
               }
             </p>
             {campaign.target_revenue && (
-              <div className="mt-2 bg-slate-700 rounded-full h-2">
+              <div className="mt-2 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                 <div
                   className="bg-green-500 h-2 rounded-full transition-all"
                   style={{ width: `${Math.min((achievementRevenue / campaign.target_revenue) * 100, 100)}%` }}
@@ -138,16 +166,16 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         </Card>
       </div>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-slate-50">Aktivitas Campaign</CardTitle>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Aktivitas Campaign</CardTitle>
           {canEdit && (
             <Button
               onClick={() => {
                 setEditingActivity(null);
                 setShowDialog(true);
               }}
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
             >
               <Plus className="h-4 w-4" />
               Tambah Aktivitas
@@ -168,32 +196,37 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           )}
 
           {activities.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada aktivitas ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada aktivitas ditemukan</p>
           ) : (
             <div className="space-y-3">
               {activities.map((activity: any) => (
                 <div
                   key={activity.id}
-                  className="p-4 rounded-lg bg-slate-700 border border-slate-600 hover:border-slate-500 transition-colors"
+                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-slate-50">
+                        <h3 className="font-semibold text-slate-900 dark:text-slate-50">
                           {activity.jenis_aktivitas}
                         </h3>
+                        {(activity.master_customers as any)?.name && (
+                          <span className="text-sm text-slate-600 dark:text-slate-400">
+                            - {(activity.master_customers as any)?.name}
+                          </span>
+                        )}
                         {activity.potential_value && (
-                          <span className="text-sm text-green-400 font-semibold">
+                          <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
                             Rp {activity.potential_value.toLocaleString('id-ID')}
                           </span>
                         )}
                       </div>
                       {activity.keterangan && (
-                        <p className="text-sm text-slate-300 mb-2">
+                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
                           {activity.keterangan}
                         </p>
                       )}
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
                         Tanggal: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('id-ID', {
                           weekday: 'long',
                           year: 'numeric',
@@ -211,7 +244,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                             setEditingActivity(activity);
                             setShowDialog(true);
                           }}
-                          className="text-blue-400 hover:text-blue-300"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -219,7 +252,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteActivity(activity.id)}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

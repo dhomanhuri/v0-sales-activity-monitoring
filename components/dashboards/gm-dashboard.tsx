@@ -58,18 +58,30 @@ export function GMDashboard({ userId }: { userId: string }) {
           return sum + (Number(camp.target_revenue) || 0);
         }, 0);
 
-        // Calculate Potential Revenue (latest activity potential_value per campaign, then sum)
+        // Calculate Potential Revenue (akumulasi potential value terakhir tiap customer per campaign)
         let potentialRevenue = 0;
         for (const campaign of campaigns || []) {
           const { data: activities } = await supabase
             .from("campaign_activities")
-            .select("potential_value, tanggal_aktivitas")
+            .select("customer_id, potential_value, tanggal_aktivitas, created_at")
             .eq("campaign_id", campaign.id)
-            .order("tanggal_aktivitas", { ascending: false })
-            .limit(1);
+            .order("tanggal_aktivitas", { ascending: false });
           
           if (activities && activities.length > 0) {
-            potentialRevenue += Number(activities[0].potential_value) || 0;
+            // Group by customer_id, keep only latest activity per customer
+            const customerLatestActivity = new Map<string, any>();
+            
+            for (const activity of activities) {
+              const customerId = activity.customer_id;
+              if (customerId && !customerLatestActivity.has(customerId)) {
+                customerLatestActivity.set(customerId, activity);
+              }
+            }
+            
+            // Sum potential_value from latest activities per customer
+            for (const activity of customerLatestActivity.values()) {
+              potentialRevenue += Number(activity.potential_value) || 0;
+            }
           }
         }
 
@@ -176,16 +188,16 @@ export function GMDashboard({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-50">Performa Tim ({team.length} Sales)</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Performa Tim ({team.length} Sales)</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Tahun</span>
+              <span className="text-slate-600 dark:text-slate-400 text-sm">Tahun</span>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-50"
+                className="px-3 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
               >
                 {yearOptions.map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -193,44 +205,44 @@ export function GMDashboard({ userId }: { userId: string }) {
               </select>
             </div>
           </div>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-slate-600 dark:text-slate-400">
             Monitoring performa penjualan tim Anda
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 dark:text-slate-400" />
             <Input
               placeholder="Cari sales..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
+              className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
             />
           </div>
 
           {filteredSummaries.length === 0 ? (
-            <p className="text-slate-400">Tidak ada data performa ditemukan.</p>
+            <p className="text-slate-600 dark:text-slate-400">Tidak ada data performa ditemukan.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredSummaries.map((s) => {
                 const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
                 return (
-                  <div key={s.salesId} className="p-4 rounded-lg bg-slate-700 border border-slate-600">
+                  <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-50">{s.salesName}</h3>
-                      <span className="text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
+                      <span className="text-slate-600 dark:text-slate-400 text-sm">{percent.toFixed(0)}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
                       <div>
-                        <div className="text-slate-400">Target</div>
-                        <div className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-slate-600 dark:text-slate-400">Target</div>
+                        <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-400">Potential</div>
+                        <div className="text-slate-600 dark:text-slate-400">Potential</div>
                         <div className="text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-400">Achievement</div>
+                        <div className="text-slate-600 dark:text-slate-400">Achievement</div>
                         <div className="text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
                       </div>
                     </div>
@@ -240,7 +252,7 @@ export function GMDashboard({ userId }: { userId: string }) {
                         style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <div className="text-sm text-slate-400">Campaign: {s.campaignCount}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Campaign: {s.campaignCount}</div>
                   </div>
                 );
               })}
@@ -249,14 +261,14 @@ export function GMDashboard({ userId }: { userId: string }) {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Revenue Bulanan (Closing)</CardTitle>
-          <CardDescription className="text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Revenue Bulanan (Closing)</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-400">Belum ada revenue pada tahun ini.</p>
+            <p className="text-slate-600 dark:text-slate-400">Belum ada revenue pada tahun ini.</p>
           ) : (
             <div className="grid grid-cols-12 gap-2 items-end h-40">
               {monthlyRevenue.map((value, idx) => {
@@ -269,7 +281,7 @@ export function GMDashboard({ userId }: { userId: string }) {
                       style={{ height: `${heightPct}%` }}
                       title={`Rp ${value.toLocaleString('id-ID')}`}
                     />
-                    <div className="text-[10px] text-slate-400">{idx + 1}</div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400">{idx + 1}</div>
                   </div>
                 );
               })}
@@ -278,29 +290,29 @@ export function GMDashboard({ userId }: { userId: string }) {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Aktivitas Terbaru Tim</CardTitle>
-          <CardDescription className="text-slate-400">10 aktivitas terbaru dari tim Anda</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Aktivitas Terbaru Tim</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">10 aktivitas terbaru dari tim Anda</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {recentActivities.length === 0 ? (
-            <p className="text-slate-400">Belum ada aktivitas.</p>
+            <p className="text-slate-600 dark:text-slate-400">Belum ada aktivitas.</p>
           ) : (
             recentActivities.map((a) => {
               const campaign = (a.campaigns as any);
               return (
-                <div key={a.id} className="p-3 rounded-lg bg-slate-700 border border-slate-600">
+                <div key={a.id} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-slate-50 text-sm">
+                      <div className="text-slate-900 dark:text-slate-50 text-sm">
                         {a.jenis_aktivitas} • {campaign?.master_customers?.name} - {campaign?.master_campaigns?.name}
                       </div>
-                      <div className="text-slate-400 text-xs">
+                      <div className="text-slate-600 dark:text-slate-400 text-xs">
                         {new Date(a.tanggal_aktivitas).toLocaleDateString('id-ID')}
                       </div>
                     </div>
-                    <div className="text-slate-400 text-xs">
+                    <div className="text-slate-600 dark:text-slate-400 text-xs">
                       {campaign?.users?.nama_lengkap}
                       {a.potential_value && ` • Rp ${Number(a.potential_value).toLocaleString('id-ID')}`}
                     </div>

@@ -55,18 +55,18 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
     <div className="space-y-6">
       <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
           <Input
             placeholder="Cari user..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
+            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-50"
+          className="px-4 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
         >
           <option value="">Semua Role</option>
           <option value="Admin">Admin</option>
@@ -96,30 +96,30 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
         />
       )}
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardContent className="pt-6">
           {filteredUsers.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada user ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada user ditemukan</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-700">
-                    <th className="text-left py-3 px-4 text-slate-300">Nama</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Email</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Role</th>
-                    <th className="text-left py-3 px-4 text-slate-300">Status</th>
-                    <th className="text-right py-3 px-4 text-slate-300">Aksi</th>
+                  <tr className="border-b border-slate-200 dark:border-slate-700">
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Nama</th>
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Email</th>
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Role</th>
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Status</th>
+                    <th className="text-right py-3 px-4 text-slate-700 dark:text-slate-300">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr
                       key={user.id}
-                      className="border-b border-slate-700 hover:bg-slate-700/50"
+                      className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                     >
-                      <td className="py-3 px-4 text-slate-50">{user.nama_lengkap}</td>
-                      <td className="py-3 px-4 text-slate-400">{user.email}</td>
+                      <td className="py-3 px-4 text-slate-900 dark:text-slate-50">{user.nama_lengkap}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{user.email}</td>
                       <td className="py-3 px-4">
                         <Badge
                           className={

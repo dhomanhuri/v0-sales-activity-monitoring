@@ -28,10 +28,10 @@ export default async function MasterCampaignsPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="p-8 bg-slate-900 min-h-screen space-y-6">
+    <div className="p-8 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-50">Master Campaign</h1>
-        <p className="text-slate-400 mt-2">Kelola data master campaign</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Master Campaign</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Kelola data master campaign</p>
       </div>
 
       <MasterCampaignsList initialCampaigns={campaigns || []} />

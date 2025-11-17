@@ -49,18 +49,54 @@ export default async function TargetsPage() {
       return sum + (Number(camp.target_revenue) || 0);
     }, 0);
 
-    // Calculate Potential Revenue (latest activity potential_value per campaign, then sum)
+    // Calculate Potential Revenue (akumulasi potential value terakhir tiap customer per campaign)
     let potentialRevenue = 0;
     for (const campaign of campaigns || []) {
       const { data: activities } = await supabase
         .from("campaign_activities")
-        .select("potential_value, tanggal_aktivitas")
-        .eq("campaign_id", campaign.id)
-        .order("tanggal_aktivitas", { ascending: false })
-        .limit(1);
+        .select("customer_id, potential_value, tanggal_aktivitas, created_at")
+        .eq("campaign_id", campaign.id);
       
       if (activities && activities.length > 0) {
-        potentialRevenue += Number(activities[0].potential_value) || 0;
+        // Filter out activities without customer_id
+        const activitiesWithCustomer = activities.filter(a => a.customer_id);
+        
+        if (activitiesWithCustomer.length > 0) {
+          // Sort by tanggal_aktivitas descending (with created_at as fallback)
+          // If dates are equal, use created_at as secondary sort
+          const sortedActivities = [...activitiesWithCustomer].sort((a, b) => {
+            const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+            const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+            if (dateB !== dateA) {
+              return dateB - dateA;
+            }
+            // If dates are equal, sort by created_at descending
+            const createdA = new Date(a.created_at || 0).getTime();
+            const createdB = new Date(b.created_at || 0).getTime();
+            return createdB - createdA;
+          });
+          
+          // Group by customer_id, keep only latest activity per customer
+          const customerLatestActivity = new Map<string, any>();
+          
+          for (const activity of sortedActivities) {
+            const customerId = activity.customer_id;
+            if (customerId && !customerLatestActivity.has(customerId)) {
+              customerLatestActivity.set(customerId, activity);
+            }
+          }
+          
+          // Sum potential_value from latest activities per customer
+          for (const activity of customerLatestActivity.values()) {
+            // Ensure we parse the value correctly, handling null, undefined, and empty strings
+            const value = activity.potential_value != null 
+              ? Number(activity.potential_value) 
+              : 0;
+            if (!isNaN(value)) {
+              potentialRevenue += value;
+            }
+          }
+        }
       }
     }
 
@@ -88,10 +124,10 @@ export default async function TargetsPage() {
   }
 
   return (
-    <div className="p-8 bg-slate-900 min-h-screen space-y-6">
+    <div className="p-8 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-50">Target Penjualan</h1>
-        <p className="text-slate-400 mt-2">Ringkasan target, potential, dan achievement revenue dari semua campaign per sales</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Target Penjualan</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Ringkasan target, potential, dan achievement revenue dari semua campaign per sales</p>
       </div>
 
       <TargetsList initialTargets={salesTargets} userRole={userProfile?.role} userId={user.id} />

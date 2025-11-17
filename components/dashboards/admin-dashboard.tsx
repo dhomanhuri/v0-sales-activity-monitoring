@@ -74,21 +74,45 @@ export function AdminDashboard() {
         // Get all activities for potential and achievement calculation
         const { data: allActivities } = await supabase
           .from("campaign_activities")
-          .select("campaign_id, jenis_aktivitas, potential_value, tanggal_aktivitas")
+          .select("campaign_id, customer_id, jenis_aktivitas, potential_value, tanggal_aktivitas, created_at")
           .in("campaign_id", allCampaignIds);
 
-        // Calculate potential revenue (latest per campaign)
-        const campaignLatest = new Map<string, { value: number; date: string }>();
+        // Calculate potential revenue (akumulasi potential value terakhir tiap customer per campaign)
+        // Group activities by campaign_id first
+        const activitiesByCampaign = new Map<string, any[]>();
         for (const act of allActivities || []) {
-          const existing = campaignLatest.get(act.campaign_id);
-          if (!existing || new Date(act.tanggal_aktivitas) > new Date(existing.date)) {
-            campaignLatest.set(act.campaign_id, {
-              value: Number(act.potential_value) || 0,
-              date: act.tanggal_aktivitas,
+          const campId = act.campaign_id;
+          if (!activitiesByCampaign.has(campId)) {
+            activitiesByCampaign.set(campId, []);
+          }
+          activitiesByCampaign.get(campId)!.push(act);
+        }
+        
+        // For each campaign, calculate potential revenue from latest activity per customer
+        for (const [campaignId, activities] of activitiesByCampaign.entries()) {
+          if (activities.length > 0) {
+            // Sort by tanggal_aktivitas descending
+            const sortedActivities = [...activities].sort((a, b) => {
+              const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+              const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+              return dateB - dateA;
             });
+            
+            // Group by customer_id, keep only latest activity per customer
+            const customerLatestActivity = new Map<string, any>();
+            for (const activity of sortedActivities) {
+              const customerId = activity.customer_id;
+              if (customerId && !customerLatestActivity.has(customerId)) {
+                customerLatestActivity.set(customerId, activity);
+              }
+            }
+            
+            // Sum potential_value from latest activities per customer
+            for (const activity of customerLatestActivity.values()) {
+              totalPotentialRevenue += Number(activity.potential_value) || 0;
+            }
           }
         }
-        totalPotentialRevenue = Array.from(campaignLatest.values()).reduce((sum, v) => sum + v.value, 0);
 
         // Calculate achievement revenue and monthly revenue
         for (const act of allActivities || []) {
@@ -128,7 +152,7 @@ export function AdminDashboard() {
       // Get all activities once
       const { data: allActivitiesForSummary } = await supabase
         .from("campaign_activities")
-        .select("campaign_id, jenis_aktivitas, potential_value, tanggal_aktivitas");
+        .select("campaign_id, customer_id, jenis_aktivitas, potential_value, tanggal_aktivitas, created_at");
 
       // Group activities by campaign_id
       const activitiesByCampaign = new Map<string, any[]>();
@@ -154,12 +178,28 @@ export function AdminDashboard() {
         for (const campaign of salesCampaigns) {
           const activities = activitiesByCampaign.get(campaign.id) || [];
           
-          // Potential: latest activity
+          // Potential: akumulasi potential value terakhir tiap customer
           if (activities.length > 0) {
-            const latest = activities.sort((a, b) => 
-              new Date(b.tanggal_aktivitas).getTime() - new Date(a.tanggal_aktivitas).getTime()
-            )[0];
-            potentialRevenue += Number(latest.potential_value) || 0;
+            // Sort by tanggal_aktivitas descending
+            const sortedActivities = [...activities].sort((a, b) => {
+              const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+              const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+              return dateB - dateA;
+            });
+            
+            // Group by customer_id, keep only latest activity per customer
+            const customerLatestActivity = new Map<string, any>();
+            for (const activity of sortedActivities) {
+              const customerId = activity.customer_id;
+              if (customerId && !customerLatestActivity.has(customerId)) {
+                customerLatestActivity.set(customerId, activity);
+              }
+            }
+            
+            // Sum potential_value from latest activities per customer
+            for (const activity of customerLatestActivity.values()) {
+              potentialRevenue += Number(activity.potential_value) || 0;
+            }
           }
 
           // Achievement: all closing
@@ -202,16 +242,16 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-50">Overview Sistem</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Overview Sistem</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-sm">Tahun</span>
+              <span className="text-slate-600 dark:text-slate-400 text-sm">Tahun</span>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-50"
+                className="px-3 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
               >
                 {yearOptions.map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -219,50 +259,50 @@ export function AdminDashboard() {
               </select>
             </div>
           </div>
-          <CardDescription className="text-slate-400">Ringkasan keseluruhan sistem penjualan</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Ringkasan keseluruhan sistem penjualan</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Total Sales</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalSales}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Sales</div>
+              <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalSales}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Total GM</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalGm}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total GM</div>
+              <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalGm}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Total Campaigns</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalCampaigns}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Campaigns</div>
+              <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalCampaigns}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Master Customers</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalMasterCustomers}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Master Customers</div>
+              <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalMasterCustomers}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Target Revenue</div>
-              <div className="text-slate-50 text-2xl font-semibold">Rp {kpis.totalTargetRevenue.toLocaleString('id-ID')}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Target Revenue</div>
+              <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">Rp {kpis.totalTargetRevenue.toLocaleString('id-ID')}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Potential Revenue</div>
-              <div className="text-blue-400 text-2xl font-semibold">Rp {kpis.totalPotentialRevenue.toLocaleString('id-ID')}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Potential Revenue</div>
+              <div className="text-blue-600 dark:text-blue-400 text-2xl font-semibold">Rp {kpis.totalPotentialRevenue.toLocaleString('id-ID')}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Achievement Revenue</div>
-              <div className="text-green-400 text-2xl font-semibold">Rp {kpis.totalAchievementRevenue.toLocaleString('id-ID')}</div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Achievement Revenue</div>
+              <div className="text-green-600 dark:text-green-400 text-2xl font-semibold">Rp {kpis.totalAchievementRevenue.toLocaleString('id-ID')}</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Revenue Bulanan (Closing)</CardTitle>
-          <CardDescription className="text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Revenue Bulanan (Closing)</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-400">Belum ada revenue pada tahun ini.</p>
+            <p className="text-slate-600 dark:text-slate-400">Belum ada revenue pada tahun ini.</p>
           ) : (
             <div className="grid grid-cols-12 gap-2 items-end h-40">
               {monthlyRevenue.map((value, idx) => {
@@ -275,7 +315,7 @@ export function AdminDashboard() {
                       style={{ height: `${heightPct}%` }}
                       title={`Rp ${value.toLocaleString('id-ID')}`}
                     />
-                    <div className="text-[10px] text-slate-400">{idx + 1}</div>
+                    <div className="text-[10px] text-slate-600 dark:text-slate-400">{idx + 1}</div>
                   </div>
                 );
               })}
@@ -284,56 +324,56 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-50">Top Sales by Achievement</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Top Sales by Achievement</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Cari sales..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 bg-slate-800 border-slate-700 text-slate-50"
+                className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
               />
             </div>
           </div>
-          <CardDescription className="text-slate-400">Berdasarkan achievement revenue dari campaigns</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Berdasarkan achievement revenue dari campaigns</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredTopSales.length === 0 ? (
-            <p className="text-slate-400">Tidak ada data.</p>
+            <p className="text-slate-600 dark:text-slate-400">Tidak ada data.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredTopSales.map((s) => {
                 const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
                 return (
-                  <div key={s.salesId} className="p-4 rounded-lg bg-slate-700 border border-slate-600">
+                  <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-50">{s.salesName}</h3>
-                      <span className="text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
+                      <span className="text-slate-600 dark:text-slate-400 text-sm">{percent.toFixed(0)}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
                       <div>
-                        <div className="text-slate-400">Target</div>
-                        <div className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-slate-600 dark:text-slate-400">Target</div>
+                        <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-400">Potential</div>
-                        <div className="text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-slate-600 dark:text-slate-400">Potential</div>
+                        <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-400">Achievement</div>
-                        <div className="text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-slate-600 dark:text-slate-400">Achievement</div>
+                        <div className="text-green-600 dark:text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
                       </div>
                     </div>
-                    <div className="bg-slate-600 rounded-full h-2 mb-2">
+                    <div className="bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
                       <div
                         className="bg-orange-500 h-2 rounded-full"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <div className="text-sm text-slate-400">Campaign: {s.campaignCount}</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">Campaign: {s.campaignCount}</div>
                   </div>
                 );
               })}

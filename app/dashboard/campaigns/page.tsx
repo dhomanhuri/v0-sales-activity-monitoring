@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
-import { CampaignsList } from "@/components/campaigns/campaigns-list";
+import { SalesList } from "@/components/campaigns/sales-list";
 
 export default async function CampaignsPage() {
   const supabase = await createClient();
@@ -21,36 +21,31 @@ export default async function CampaignsPage() {
     redirect("/auth/login");
   }
 
-  // Get campaigns based on role
-  let query = supabase.from("campaigns").select(`
-    *,
-    master_customers:customer_id(name),
-    master_campaigns:campaign_id(name),
-    users:sales_id(nama_lengkap)
-  `);
+  // Get sales list based on role
+  let salesQuery = supabase
+    .from("users")
+    .select("id, nama_lengkap, email, role")
+    .eq("role", "Sales");
 
   if (userProfile.role === "Sales") {
-    query = query.eq("sales_id", user.id);
+    // Sales hanya melihat dirinya sendiri
+    salesQuery = salesQuery.eq("id", user.id);
   } else if (userProfile.role === "GM") {
-    const { data: subordinates } = await supabase
-      .from("users")
-      .select("id")
-      .eq("gm_id", user.id);
-    
-    const subordinateIds = subordinates?.map(s => s.id) || [];
-    query = query.in("sales_id", subordinateIds.length > 0 ? subordinateIds : [""]);
+    // GM melihat sales di bawahnya
+    salesQuery = salesQuery.eq("gm_id", user.id);
   }
+  // Admin melihat semua sales
 
-  const { data: campaigns } = await query.order("created_at", { ascending: false });
+  const { data: sales } = await salesQuery.order("nama_lengkap", { ascending: true });
 
   return (
-    <div className="p-8 bg-slate-900 min-h-screen space-y-6">
+    <div className="p-8 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-50">Campaign</h1>
-        <p className="text-slate-400 mt-2">Kelola campaign penjualan</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Campaign</h1>
+        <p className="text-slate-600 dark:text-slate-400 mt-2">Pilih sales untuk melihat dan mengelola campaign</p>
       </div>
 
-      <CampaignsList initialCampaigns={campaigns || []} userRole={userProfile?.role} userId={user.id} />
+      <SalesList initialSales={sales || []} />
     </div>
   );
 }

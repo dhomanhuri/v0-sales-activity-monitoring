@@ -49,12 +49,12 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
     <div className="space-y-6">
       <div className="flex gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
           <Input
             placeholder="Cari campaign..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
+            className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
           />
         </div>
         <Button
@@ -80,24 +80,24 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
         />
       )}
 
-      <Card className="bg-slate-800 border-slate-700">
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardContent className="pt-6">
           {filteredCampaigns.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada campaign ditemukan</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada campaign ditemukan</p>
           ) : (
             <div className="space-y-2">
               {filteredCampaigns.map((campaign) => (
                 <div
                   key={campaign.id}
-                  className="p-4 rounded-lg bg-slate-700 border border-slate-600 hover:border-slate-500 transition-colors"
+                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-slate-50 mb-1">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-1">
                         {campaign.name}
                       </h3>
                       {campaign.description && (
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
                           {campaign.description}
                         </p>
                       )}
