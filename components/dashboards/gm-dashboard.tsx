@@ -191,9 +191,9 @@ export function GMDashboard({ userId }: { userId: string }) {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Performa Tim ({team.length} Sales)</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Team Performance ({team.length} Sales)</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-slate-600 dark:text-slate-400 text-sm">Tahun</span>
+              <span className="text-slate-600 dark:text-slate-400 text-sm">Year</span>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
@@ -206,7 +206,7 @@ export function GMDashboard({ userId }: { userId: string }) {
             </div>
           </div>
           <CardDescription className="text-slate-600 dark:text-slate-400">
-            Monitoring performa penjualan tim Anda
+            Monitor your sales team performance
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -221,7 +221,7 @@ export function GMDashboard({ userId }: { userId: string }) {
           </div>
 
           {filteredSummaries.length === 0 ? (
-            <p className="text-slate-600 dark:text-slate-400">Tidak ada data performa ditemukan.</p>
+            <p className="text-slate-600 dark:text-slate-400">No performance data found.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredSummaries.map((s) => {
@@ -263,12 +263,12 @@ export function GMDashboard({ userId }: { userId: string }) {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Revenue Bulanan (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-600 dark:text-slate-400">Belum ada revenue pada tahun ini.</p>
+            <p className="text-slate-600 dark:text-slate-400">No revenue for this year yet.</p>
           ) : (
             <div className="grid grid-cols-12 gap-2 items-end h-40">
               {monthlyRevenue.map((value, idx) => {
@@ -292,12 +292,12 @@ export function GMDashboard({ userId }: { userId: string }) {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Aktivitas Terbaru Tim</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">10 aktivitas terbaru dari tim Anda</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Latest Team Activities</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">10 latest activities from your team</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {recentActivities.length === 0 ? (
-            <p className="text-slate-600 dark:text-slate-400">Belum ada aktivitas.</p>
+            <p className="text-slate-600 dark:text-slate-400">No activities yet.</p>
           ) : (
             recentActivities.map((a) => {
               const campaign = (a.campaigns as any);

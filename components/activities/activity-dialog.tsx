@@ -166,7 +166,7 @@ export function ActivityDialog({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="bg-slate-800 border-slate-700 text-slate-50 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{activity ? "Edit Aktivitas" : "Tambah Aktivitas Baru"}</DialogTitle>
+          <DialogTitle>{activity ? "Edit Activity" : "Add New Activity"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -179,7 +179,7 @@ export function ActivityDialog({
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
                 required
               >
-                <option value="">Pilih Sales</option>
+                <option value="">Select Sales</option>
                 {salesList && salesList.length > 0 ? (
                   salesList.map((sales) => (
                     <option key={sales.id} value={sales.id}>
@@ -187,7 +187,7 @@ export function ActivityDialog({
                     </option>
                   ))
                 ) : (
-                  <option disabled>Tidak ada sales tersedia</option>
+                  <option disabled>No sales available</option>
                 )}
               </select>
             </div>
@@ -202,7 +202,7 @@ export function ActivityDialog({
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
               required
             >
-              <option value="">Pilih Customer</option>
+              <option value="">Select Customer</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.nama_perusahaan}
@@ -212,7 +212,7 @@ export function ActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Jenis Aktivitas*</Label>
+            <Label className="text-slate-300">Activity Type*</Label>
             <select
               value={formData.jenis_aktivitas_id}
               onChange={(e) =>
@@ -221,7 +221,7 @@ export function ActivityDialog({
               className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
               required
             >
-              <option value="">Pilih Aktivitas</option>
+              <option value="">Select Activity</option>
               {activityTypes.map((type) => (
                 <option key={type.id} value={type.id}>
                   {type.nama_aktivitas}
@@ -232,7 +232,7 @@ export function ActivityDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-slate-300">Tanggal Aktivitas*</Label>
+              <Label className="text-slate-300">Activity Date*</Label>
               <Input
                 type="date"
                 value={formData.tanggal_aktivitas}
@@ -254,13 +254,13 @@ export function ActivityDialog({
               >
                 <option value="Planned">Planned</option>
                 <option value="In Progress">In Progress</option>
-                <option value="Selesai">Selesai</option>
+                <option value="Selesai">Completed</option>
               </select>
             </div>
           </div>
 
           <div>
-            <Label className="text-slate-300">Catatan</Label>
+            <Label className="text-slate-300">Notes</Label>
             <textarea
               value={formData.catatan}
               onChange={(e) =>
@@ -271,7 +271,7 @@ export function ActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Langkah Selanjutnya</Label>
+            <Label className="text-slate-300">Next Step</Label>
             <Input
               value={formData.next_step}
               onChange={(e) =>
@@ -282,7 +282,7 @@ export function ActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Link Lampiran</Label>
+            <Label className="text-slate-300">Attachment Link</Label>
             <Input
               value={formData.lampiran_link}
               onChange={(e) =>
@@ -302,14 +302,14 @@ export function ActivityDialog({
               onClick={onClose}
               className="border-slate-600 text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>

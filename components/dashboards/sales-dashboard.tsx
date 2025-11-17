@@ -181,13 +181,13 @@ export function SalesDashboard({ userId }: { userId: string }) {
       {/* Recent Activities */}
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Aktivitas Terbaru</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">5 aktivitas terbaru dari campaign Anda</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Latest Activities</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">5 latest activities from your campaigns</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             {stats.recentActivities.length === 0 ? (
-              <p className="text-slate-600 dark:text-slate-400">Tidak ada aktivitas terbaru</p>
+              <p className="text-slate-600 dark:text-slate-400">No recent activities</p>
             ) : (
               stats.recentActivities.map((activity) => {
                 const campaign = (activity.campaigns as any);

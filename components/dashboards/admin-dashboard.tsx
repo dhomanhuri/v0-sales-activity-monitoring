@@ -245,9 +245,9 @@ export function AdminDashboard() {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Overview Sistem</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">System Overview</CardTitle>
             <div className="flex items-center gap-2">
-              <span className="text-slate-600 dark:text-slate-400 text-sm">Tahun</span>
+              <span className="text-slate-600 dark:text-slate-400 text-sm">Year</span>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
@@ -259,7 +259,7 @@ export function AdminDashboard() {
               </select>
             </div>
           </div>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Ringkasan keseluruhan sistem penjualan</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Overall sales system summary</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -297,12 +297,12 @@ export function AdminDashboard() {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Revenue Bulanan (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-600 dark:text-slate-400">Belum ada revenue pada tahun ini.</p>
+            <p className="text-slate-600 dark:text-slate-400">No revenue for this year yet.</p>
           ) : (
             <div className="grid grid-cols-12 gap-2 items-end h-40">
               {monthlyRevenue.map((value, idx) => {
@@ -331,7 +331,7 @@ export function AdminDashboard() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Cari sales..."
+                placeholder="Search sales..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"

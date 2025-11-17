@@ -41,7 +41,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
   };
 
   const handleDeleteActivity = async (activityId: string) => {
-    if (!confirm("Yakin ingin menghapus aktivitas ini?")) return;
+    if (!confirm("Are you sure you want to delete this activity?")) return;
 
     try {
       const supabase = createClient();
@@ -53,7 +53,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
       if (error) throw error;
       setActivities(activities.filter(a => a.id !== activityId));
     } catch (err: any) {
-      alert("Gagal menghapus aktivitas: " + err.message);
+      alert("Failed to delete activity: " + err.message);
     }
   };
 
@@ -63,7 +63,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input
-            placeholder="Cari aktivitas..."
+            placeholder="Search activities..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
@@ -74,10 +74,10 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-50"
         >
-          <option value="">Semua Status</option>
+          <option value="">All Status</option>
           <option value="Planned">Planned</option>
           <option value="In Progress">In Progress</option>
-          <option value="Selesai">Selesai</option>
+          <option value="Selesai">Completed</option>
         </select>
         <Button
           onClick={() => {
@@ -87,7 +87,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah Aktivitas
+          Add Activity
         </Button>
       </div>
 
@@ -107,7 +107,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
       <Card className="bg-slate-800 border-slate-700">
         <CardContent className="pt-6">
           {filteredActivities.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada aktivitas ditemukan</p>
+            <p className="text-center text-slate-400 py-8">No activities found</p>
           ) : (
             <div className="space-y-2">
               {filteredActivities.map((activity) => (
@@ -126,11 +126,11 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-400 mb-2">
-                        Aktivitas: {(activity.activity_types as any)?.nama_aktivitas}
+                        Activity: {(activity.activity_types as any)?.nama_aktivitas}
                       </p>
                       <div className="flex gap-4 text-sm text-slate-400">
-                        <span>Tanggal: {new Date(activity.tanggal_aktivitas).toLocaleDateString('id-ID')}</span>
-                        {activity.catatan && <span>Catatan: {activity.catatan}</span>}
+                        <span>Date: {new Date(activity.tanggal_aktivitas).toLocaleDateString('en-US')}</span>
+                        {activity.catatan && <span>Notes: {activity.catatan}</span>}
                       </div>
                     </div>
                     <div className="flex gap-2">

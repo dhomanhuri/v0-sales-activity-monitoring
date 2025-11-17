@@ -66,7 +66,7 @@ export default function LoginPage() {
                       d="M13 10V3L4 14h7v7l9-11h-7z"
                     />
                   </svg> */}
-                  <img src="/logo.png" alt="logo" className="" />
+                  <img src="/logo.png" alt="logo" width={100}/>
                 </div>
               </div>
               <CardTitle className="text-3xl font-bold text-slate-900 dark:text-slate-50">

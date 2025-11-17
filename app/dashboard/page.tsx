@@ -28,9 +28,9 @@ export default async function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Dashboard</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-2">
-          {userProfile.role === 'Sales' && 'Ringkasan aktivitas penjualan Anda'}
-          {userProfile.role === 'GM' && 'Performa tim penjualan Anda'}
-          {userProfile.role === 'Admin' && 'Ringkasan keseluruhan sistem'}
+          {userProfile.role === 'Sales' && 'Summary of your sales activities'}
+          {userProfile.role === 'GM' && 'Your sales team performance'}
+          {userProfile.role === 'Admin' && 'Overall system summary'}
         </p>
       </div>
 

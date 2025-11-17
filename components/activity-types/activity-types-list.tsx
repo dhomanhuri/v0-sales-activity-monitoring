@@ -40,14 +40,14 @@ export function ActivityTypesList({ initialTypes }: any) {
       setNamaAktivitas("");
       setShowDialog(false);
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
+      setError(err.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus jenis aktivitas ini?")) return;
+    if (!confirm("Are you sure you want to delete this activity type?")) return;
 
     try {
       const supabase = createClient();
@@ -60,7 +60,7 @@ export function ActivityTypesList({ initialTypes }: any) {
       if (deleteError) throw deleteError;
       setTypes(types.filter((t: any) => t.id !== id));
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan saat menghapus");
+      setError(err.message || "An error occurred while deleting");
     }
   };
 
@@ -72,18 +72,18 @@ export function ActivityTypesList({ initialTypes }: any) {
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah Jenis Aktivitas
+          Add Activity Type
         </Button>
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="bg-slate-800 border-slate-700 text-slate-50">
           <DialogHeader>
-            <DialogTitle>Tambah Jenis Aktivitas</DialogTitle>
+            <DialogTitle>Add Activity Type</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <Label className="text-slate-300">Nama Aktivitas*</Label>
+              <Label className="text-slate-300">Activity Name*</Label>
               <Input
                 value={namaAktivitas}
                 onChange={(e) => setNamaAktivitas(e.target.value)}
@@ -99,14 +99,14 @@ export function ActivityTypesList({ initialTypes }: any) {
                 onClick={() => setShowDialog(false)}
                 className="border-slate-600 text-slate-300"
               >
-                Batal
+                Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {isLoading ? "Menambah..." : "Tambah"}
+                {isLoading ? "Adding..." : "Add"}
               </Button>
             </div>
           </form>
@@ -116,7 +116,7 @@ export function ActivityTypesList({ initialTypes }: any) {
       <Card className="bg-slate-800 border-slate-700">
         <CardContent className="pt-6">
           {types.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada jenis aktivitas</p>
+            <p className="text-center text-slate-400 py-8">No activity types</p>
           ) : (
             <div className="space-y-2">
               {types.map((type: any) => (

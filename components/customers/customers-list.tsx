@@ -46,7 +46,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
   };
 
   const handleDeleteCustomer = async (customerId: string) => {
-    if (!confirm("Yakin ingin menghapus customer ini?")) return;
+    if (!confirm("Are you sure you want to delete this customer?")) return;
 
     try {
       const supabase = createClient();
@@ -58,7 +58,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
       if (error) throw error;
       setCustomers(customers.filter(c => c.id !== customerId));
     } catch (err: any) {
-      alert("Gagal menghapus customer: " + err.message);
+      alert("Failed to delete customer: " + err.message);
     }
   };
 
@@ -68,7 +68,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
           <Input
-            placeholder="Cari customer..."
+            placeholder="Search customer..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10 bg-slate-800 border-slate-700 text-slate-50"
@@ -79,7 +79,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-50"
         >
-          <option value="">Semua Status</option>
+          <option value="">All Status</option>
           <option value="Lead">Lead</option>
           <option value="Follow Up">Follow Up</option>
           <option value="Proposal Dikirim">Proposal Dikirim</option>
@@ -95,7 +95,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
           className="gap-2 bg-blue-600 hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          Tambah Customer
+          Add Customer
         </Button>
       </div>
 
@@ -122,7 +122,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
       <Card className="bg-slate-800 border-slate-700">
         <CardContent className="pt-6">
           {filteredCustomers.length === 0 ? (
-            <p className="text-center text-slate-400 py-8">Tidak ada customer ditemukan</p>
+            <p className="text-center text-slate-400 py-8">No customers found</p>
           ) : (
             <div className="space-y-2">
               {filteredCustomers.map((customer) => (
@@ -142,9 +142,9 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
                         PIC: {customer.nama_pic} ({customer.jabatan_pic}) | {customer.nomor_hp}
                       </p>
                       <div className="flex gap-4 text-sm text-slate-400">
-                        <span>Industri: {customer.industri}</span>
-                        <span>Potensi: Rp {customer.nilai_potensial?.toLocaleString('id-ID') || '0'}</span>
-                        <span>Kota: {customer.kota}</span>
+                        <span>Industry: {customer.industri}</span>
+                        <span>Potential: Rp {customer.nilai_potensial?.toLocaleString('id-ID') || '0'}</span>
+                        <span>City: {customer.kota}</span>
                       </div>
                     </div>
                     <div className="flex gap-2">

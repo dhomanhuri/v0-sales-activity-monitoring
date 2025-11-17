@@ -77,35 +77,35 @@ export function CustomerDetailModal({ customer, onClose }: any) {
               </Badge>
             </div>
             <div>
-              <label className="text-sm text-slate-600 dark:text-slate-400">No. HP</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">Phone Number</label>
               <p className="text-slate-900 dark:text-slate-50">{customer.nomor_hp}</p>
             </div>
             <div>
-              <label className="text-sm text-slate-600 dark:text-slate-400">Industri</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">Industry</label>
               <p className="text-slate-900 dark:text-slate-50">{customer.industri}</p>
             </div>
             <div>
-              <label className="text-sm text-slate-600 dark:text-slate-400">Kota</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">City</label>
               <p className="text-slate-900 dark:text-slate-50">{customer.kota}</p>
             </div>
             <div className="col-span-2">
-              <label className="text-sm text-slate-600 dark:text-slate-400">Nilai Potensial</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">Potential Value</label>
               <p className="text-slate-900 dark:text-slate-50">Rp {customer.nilai_potensial?.toLocaleString('id-ID') || '0'}</p>
             </div>
             <div className="col-span-2">
-              <label className="text-sm text-slate-600 dark:text-slate-400">Sumber Lead</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">Lead Source</label>
               <p className="text-slate-900 dark:text-slate-50">{customer.asal_lead}</p>
             </div>
           </div>
 
           {/* Activities Section */}
           <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Aktivitas ({activities.length})</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50 mb-4">Activities ({activities.length})</h3>
             
             {loading ? (
-              <p className="text-slate-600 dark:text-slate-400 text-center py-8">Loading aktivitas...</p>
+              <p className="text-slate-600 dark:text-slate-400 text-center py-8">Loading activities...</p>
             ) : activities.length === 0 ? (
-              <p className="text-slate-600 dark:text-slate-400 text-center py-8">Tidak ada aktivitas ditemukan</p>
+              <p className="text-slate-600 dark:text-slate-400 text-center py-8">No activities found</p>
             ) : (
               <div className="space-y-3">
                 {activities.map((activity) => (
@@ -116,7 +116,7 @@ export function CustomerDetailModal({ customer, onClose }: any) {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-semibold text-slate-900 dark:text-slate-50">
-                          {(activity.activity_types as any)?.nama_aktivitas || 'Aktivitas'}
+                          {(activity.activity_types as any)?.nama_aktivitas || 'Activity'}
                         </h4>
                         <p className="text-sm text-slate-600 dark:text-slate-400">
                           {new Date(activity.tanggal_aktivitas).toLocaleDateString('id-ID', {
@@ -133,7 +133,7 @@ export function CustomerDetailModal({ customer, onClose }: any) {
                     </div>
                     {activity.catatan && (
                       <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">
-                        <span className="text-slate-600 dark:text-slate-400">Catatan: </span>
+                        <span className="text-slate-600 dark:text-slate-400">Notes: </span>
                         {activity.catatan}
                       </p>
                     )}

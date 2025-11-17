@@ -167,7 +167,7 @@ export function CustomerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-slate-300">Nama Perusahaan*</Label>
+              <Label className="text-slate-300">Company Name*</Label>
               <Input
                 value={formData.nama_perusahaan}
                 onChange={(e) =>
@@ -178,7 +178,7 @@ export function CustomerDialog({
               />
             </div>
             <div>
-              <Label className="text-slate-300">Industri*</Label>
+              <Label className="text-slate-300">Industry*</Label>
               <select
                 value={formData.industri}
                 onChange={(e) =>
@@ -187,7 +187,7 @@ export function CustomerDialog({
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
                 required
               >
-                <option value="">Pilih Industri</option>
+                <option value="">Select Industry</option>
                 <option value="Government">Government</option>
                 <option value="FSI">FSI</option>
                 <option value="Energy">Energy</option>
@@ -199,7 +199,7 @@ export function CustomerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-slate-300">Nama PIC*</Label>
+              <Label className="text-slate-300">PIC Name*</Label>
               <Input
                 value={formData.nama_pic}
                 onChange={(e) =>
@@ -210,7 +210,7 @@ export function CustomerDialog({
               />
             </div>
             <div>
-              <Label className="text-slate-300">Jabatan PIC</Label>
+              <Label className="text-slate-300">PIC Position</Label>
               <Input
                 value={formData.jabatan_pic}
                 onChange={(e) =>
@@ -234,7 +234,7 @@ export function CustomerDialog({
               />
             </div>
             <div>
-              <Label className="text-slate-300">Nomor HP</Label>
+              <Label className="text-slate-300">Phone Number</Label>
               <Input
                 value={formData.nomor_hp}
                 onChange={(e) =>
@@ -264,7 +264,7 @@ export function CustomerDialog({
               </select>
             </div>
             <div>
-              <Label className="text-slate-300">Nilai Potensial (Rp)</Label>
+              <Label className="text-slate-300">Potential Value (Rp)</Label>
               <Input
                 type="number"
                 value={formData.nilai_potensial}
@@ -278,7 +278,7 @@ export function CustomerDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label className="text-slate-300">Asal Lead</Label>
+              <Label className="text-slate-300">Lead Source</Label>
               <Input
                 placeholder="Cold Call, Referral, Event, Online Ads"
                 value={formData.asal_lead}
@@ -289,7 +289,7 @@ export function CustomerDialog({
               />
             </div>
             <div>
-              <Label className="text-slate-300">Kota</Label>
+              <Label className="text-slate-300">City</Label>
               <Input
                 value={formData.kota}
                 onChange={(e) =>
@@ -301,7 +301,7 @@ export function CustomerDialog({
           </div>
 
           <div>
-            <Label className="text-slate-300">Catatan</Label>
+            <Label className="text-slate-300">Notes</Label>
             <textarea
               value={formData.catatan}
               onChange={(e) =>
@@ -320,14 +320,14 @@ export function CustomerDialog({
               onClick={onClose}
               className="border-slate-600 text-slate-300"
             >
-              Batal
+              Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isLoading ? "Menyimpan..." : "Simpan"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>
