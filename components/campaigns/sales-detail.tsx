@@ -82,19 +82,19 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
         />
       )}
 
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Campaign List</CardTitle>
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-orange-50/50 to-transparent dark:from-slate-800 dark:to-transparent">
+          <CardTitle className="text-slate-900 dark:text-slate-50 text-xl font-bold">Campaign List</CardTitle>
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="text-center text-slate-600 dark:text-slate-400 py-8">No campaigns found</p>
+            <p className="text-center text-slate-600 dark:text-slate-400 py-12">No campaigns found</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {campaigns.map((campaign: any) => (
                 <div
                   key={campaign.id}
-                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                  className="p-5 rounded-xl bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-700 dark:to-slate-700 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

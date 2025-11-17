@@ -5,17 +5,24 @@ import Link from "next/link";
 
 export function TopNav({ user }: { user: any }) {
   return (
-    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-        <span>Welcome,</span>
-        <span className="font-semibold text-orange-600 dark:text-orange-400">{user?.nama_lengkap}</span>
+    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-4 flex items-center justify-between shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md">
+          <span className="text-white font-bold text-sm">
+            {user?.nama_lengkap?.charAt(0)?.toUpperCase() || 'U'}
+          </span>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Welcome back,</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{user?.nama_lengkap}</p>
+        </div>
       </div>
       <Link
         href="/dashboard/profile"
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-orange-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-orange-600 dark:hover:text-white transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-50 to-orange-100 dark:from-slate-700 dark:to-slate-700 hover:from-orange-100 hover:to-orange-200 dark:hover:from-slate-600 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 hover:text-orange-700 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
       >
-        <User className="h-5 w-5" />
-        Profile
+        <User className="h-4 w-4" />
+        <span className="font-medium">Profile</span>
       </Link>
     </div>
   );

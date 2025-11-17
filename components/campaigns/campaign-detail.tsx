@@ -150,52 +150,55 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Target Revenue</CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-800 dark:to-slate-800 border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Target Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+            <p className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-1">
               Rp {(campaign.target_revenue || 0).toLocaleString('id-ID')}
             </p>
+            <div className="h-1 w-12 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full mt-2"></div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Potential Revenue</CardTitle>
+        <Card className="bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800 dark:to-slate-800 border-blue-200 dark:border-blue-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider">Potential Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
               Rp {potentialRevenue.toLocaleString('id-ID')}
             </p>
+            <div className="h-1 w-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-2"></div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Achievement Revenue</CardTitle>
+        <Card className="bg-gradient-to-br from-white to-green-50/30 dark:from-slate-800 dark:to-slate-800 border-green-200 dark:border-green-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-green-600 dark:text-green-400 text-xs font-semibold uppercase tracking-wider">Achievement Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
               Rp {achievementRevenue.toLocaleString('id-ID')}
             </p>
+            <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-green-600 rounded-full mt-2"></div>
           </CardContent>
         </Card>
-        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Progress</CardTitle>
+        <Card className="bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-slate-800 border-purple-200 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+            <p className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-3">
               {campaign.target_revenue ? 
                 `${((achievementRevenue / campaign.target_revenue) * 100).toFixed(1)}%` : 
                 'N/A'
               }
             </p>
             {campaign.target_revenue && (
-              <div className="mt-2 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+              <div className="mt-2 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
                 <div
-                  className="bg-green-500 h-2 rounded-full transition-all"
+                  className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${Math.min((achievementRevenue / campaign.target_revenue) * 100, 100)}%` }}
                 />
               </div>
@@ -204,16 +207,16 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         </Card>
       </div>
 
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-slate-900 dark:text-slate-50">Campaign Activities</CardTitle>
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
+        <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-orange-50/50 to-transparent dark:from-slate-800 dark:to-transparent pb-4">
+          <CardTitle className="text-slate-900 dark:text-slate-50 text-xl font-bold">Campaign Activities</CardTitle>
           {canEdit && (
             <Button
               onClick={() => {
                 setEditingActivity(null);
                 setShowDialog(true);
               }}
-              className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+              className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               <Plus className="h-4 w-4" />
               Add Activity
@@ -249,12 +252,12 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                 return (
                   <div
                     key={group.customerId}
-                    className="rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden"
+                    className="rounded-xl border border-slate-200 dark:border-slate-600 overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
                   >
                     {/* Customer Header */}
                     <button
                       onClick={() => toggleCustomer(group.customerId)}
-                      className="w-full p-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-between text-left"
+                      className="w-full p-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-700 hover:from-orange-50 hover:to-orange-100 dark:hover:from-slate-600 dark:hover:to-slate-600 transition-all duration-200 flex items-center justify-between text-left"
                     >
                       <div className="flex items-center gap-3 flex-1">
                         {isExpanded ? (
@@ -278,12 +281,12 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                     
                     {/* Activities List */}
                     {isExpanded && (
-                      <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-600">
-                        <div className="p-3 space-y-2">
+                      <div className="bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-600">
+                        <div className="p-4 space-y-3">
                           {group.activities.map((activity: any) => (
                             <div
                               key={activity.id}
-                              className="p-3 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                              className="p-4 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]"
                             >
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
