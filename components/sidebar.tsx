@@ -10,7 +10,7 @@ import { ThemeToggle } from './theme-toggle';
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Campaign", href: "/dashboard/campaigns", icon: Megaphone },
+  { label: "AM", href: "/dashboard/campaigns", icon: Megaphone },
   { label: "Target", href: "/dashboard/targets", icon: Target },
   { label: "Pengaturan Profil", href: "/dashboard/profile", icon: Settings },
 ];

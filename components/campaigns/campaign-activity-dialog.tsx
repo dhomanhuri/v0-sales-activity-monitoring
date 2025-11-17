@@ -26,6 +26,7 @@ export function CampaignActivityDialog({
   const [formData, setFormData] = useState({
     customer_id: "",
     jenis_aktivitas: "Initiate Call",
+    pic: "",
     keterangan: "",
     potential_value: 0,
     tanggal_aktivitas: new Date().toISOString().split('T')[0],
@@ -50,6 +51,7 @@ export function CampaignActivityDialog({
       setFormData({
         customer_id: activity.customer_id || "",
         jenis_aktivitas: activity.jenis_aktivitas,
+        pic: activity.pic || "",
         keterangan: activity.keterangan || "",
         potential_value: activity.potential_value || 0,
         tanggal_aktivitas: activity.tanggal_aktivitas || new Date().toISOString().split('T')[0],
@@ -79,6 +81,7 @@ export function CampaignActivityDialog({
           .update({
             customer_id: formData.customer_id,
             jenis_aktivitas: formData.jenis_aktivitas,
+            pic: formData.pic || null,
             keterangan: formData.keterangan,
             potential_value: parseFloat(formData.potential_value.toString()),
             tanggal_aktivitas: formData.tanggal_aktivitas,
@@ -96,6 +99,7 @@ export function CampaignActivityDialog({
             campaign_id: campaignId,
             customer_id: formData.customer_id,
             jenis_aktivitas: formData.jenis_aktivitas,
+            pic: formData.pic || null,
             keterangan: formData.keterangan,
             potential_value: parseFloat(formData.potential_value.toString()),
             tanggal_aktivitas: formData.tanggal_aktivitas,
@@ -171,6 +175,19 @@ export function CampaignActivityDialog({
               }
               className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               required
+            />
+          </div>
+
+          <div>
+            <Label className="text-slate-700 dark:text-slate-300">PIC</Label>
+            <Input
+              type="text"
+              value={formData.pic}
+              onChange={(e) =>
+                setFormData({ ...formData, pic: e.target.value })
+              }
+              className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
+              placeholder="Masukkan nama PIC..."
             />
           </div>
 

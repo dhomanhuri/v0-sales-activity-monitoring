@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CampaignActivityDialog } from "./campaign-activity-dialog";
 import { createClient } from "@/lib/supabase/client";
@@ -13,8 +13,49 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const [activities, setActivities] = useState(initialActivities);
   const [showDialog, setShowDialog] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
+  const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
 
   const canEdit = userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId;
+
+  // Group activities by customer
+  const groupedActivities = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    
+    // Sort activities by tanggal_aktivitas descending
+    const sortedActivities = [...activities].sort((a: any, b: any) => {
+      const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+      const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+      return dateB - dateA;
+    });
+    
+    for (const activity of sortedActivities) {
+      const customerId = activity.customer_id || 'no-customer';
+      const customerName = (activity.master_customers as any)?.name || 'Tanpa Customer';
+      
+      if (!groups.has(customerId)) {
+        groups.set(customerId, []);
+      }
+      groups.get(customerId)!.push(activity);
+    }
+    
+    return Array.from(groups.entries()).map(([customerId, activities]) => ({
+      customerId,
+      customerName: activities[0]?.master_customers?.name || 'Tanpa Customer',
+      activities,
+    }));
+  }, [activities]);
+
+  const toggleCustomer = (customerId: string) => {
+    setExpandedCustomers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(customerId)) {
+        newSet.delete(customerId);
+      } else {
+        newSet.add(customerId);
+      }
+      return newSet;
+    });
+  };
 
   const handleActivitySaved = (updatedActivity: any) => {
     if (editingActivity) {
@@ -123,9 +164,6 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
           <CardHeader>
             <CardTitle className="text-slate-900 dark:text-slate-50 text-sm">Potential Revenue</CardTitle>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-              Akumulasi potential value terakhir tiap customer
-            </p>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -199,68 +237,117 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
             <p className="text-center text-slate-600 dark:text-slate-400 py-8">Tidak ada aktivitas ditemukan</p>
           ) : (
             <div className="space-y-3">
-              {activities.map((activity: any) => (
-                <div
-                  key={activity.id}
-                  className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-slate-900 dark:text-slate-50">
-                          {activity.jenis_aktivitas}
-                        </h3>
-                        {(activity.master_customers as any)?.name && (
-                          <span className="text-sm text-slate-600 dark:text-slate-400">
-                            - {(activity.master_customers as any)?.name}
-                          </span>
+              {groupedActivities.map((group) => {
+                const isExpanded = expandedCustomers.has(group.customerId);
+                const activityCount = group.activities.length;
+                
+                // Calculate total potential value for this customer
+                const totalPotential = group.activities.reduce((sum: number, act: any) => {
+                  return sum + (parseFloat(act.potential_value) || 0);
+                }, 0);
+                
+                return (
+                  <div
+                    key={group.customerId}
+                    className="rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden"
+                  >
+                    {/* Customer Header */}
+                    <button
+                      onClick={() => toggleCustomer(group.customerId)}
+                      className="w-full p-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center justify-between text-left"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        {isExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-slate-600 dark:text-slate-400" />
                         )}
-                        {activity.potential_value && (
-                          <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                            Rp {activity.potential_value.toLocaleString('id-ID')}
-                          </span>
-                        )}
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-900 dark:text-slate-50">
+                            {group.customerName}
+                          </h3>
+                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                            {activityCount} aktivitas
+                            {totalPotential > 0 && (
+                              <> • Total Potential: Rp {totalPotential.toLocaleString('id-ID')}</>
+                            )}
+                          </p>
+                        </div>
                       </div>
-                      {activity.keterangan && (
-                        <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                          {activity.keterangan}
-                        </p>
-                      )}
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        Tanggal: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('id-ID', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    {canEdit && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingActivity(activity);
-                            setShowDialog(true);
-                          }}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteActivity(activity.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    </button>
+                    
+                    {/* Activities List */}
+                    {isExpanded && (
+                      <div className="bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-600">
+                        <div className="p-3 space-y-2">
+                          {group.activities.map((activity: any) => (
+                            <div
+                              key={activity.id}
+                              className="p-3 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h4 className="font-semibold text-slate-900 dark:text-slate-50">
+                                      {activity.jenis_aktivitas}
+                                    </h4>
+                                    {activity.potential_value && (
+                                      <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
+                                        Rp {activity.potential_value.toLocaleString('id-ID')}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {activity.pic && (
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                                      PIC: <span className="font-medium text-slate-700 dark:text-slate-300">{activity.pic}</span>
+                                    </p>
+                                  )}
+                                  {activity.keterangan && (
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+                                      {activity.keterangan}
+                                    </p>
+                                  )}
+                                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                                    Tanggal: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('id-ID', {
+                                      weekday: 'long',
+                                      year: 'numeric',
+                                      month: 'long',
+                                      day: 'numeric'
+                                    })}
+                                  </p>
+                                </div>
+                                {canEdit && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        setEditingActivity(activity);
+                                        setShowDialog(true);
+                                      }}
+                                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteActivity(activity.id)}
+                                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

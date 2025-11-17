@@ -41,7 +41,7 @@ export default async function CampaignsPage() {
   return (
     <div className="p-8 min-h-screen space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Campaign</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">AM</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-2">Pilih sales untuk melihat dan mengelola campaign</p>
       </div>
 
