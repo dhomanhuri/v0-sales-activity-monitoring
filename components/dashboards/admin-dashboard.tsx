@@ -9,8 +9,9 @@ type SalesSummary = {
   salesId: string;
   salesName: string;
   targetRevenue: number;
-  actualRevenue: number;
-  closingCount: number;
+  potentialRevenue: number;
+  achievementRevenue: number;
+  campaignCount: number;
 };
 
 export function AdminDashboard() {
@@ -24,10 +25,11 @@ export function AdminDashboard() {
   const [kpis, setKpis] = useState({
     totalSales: 0,
     totalGm: 0,
-    totalCustomers: 0,
-    activitiesThisYear: 0,
+    totalCampaigns: 0,
+    totalMasterCustomers: 0,
     totalTargetRevenue: 0,
-    totalActualRevenue: 0,
+    totalPotentialRevenue: 0,
+    totalAchievementRevenue: 0,
   });
   const [topSales, setTopSales] = useState<SalesSummary[]>([]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(Array.from({ length: 12 }, () => 0));
@@ -38,108 +40,156 @@ export function AdminDashboard() {
       const supabase = (await import("@/lib/supabase/client")).createClient();
 
       // Basic counts
-      const [{ data: salesUsers }, { data: gmUsers }] = await Promise.all([
-        supabase.from("users").select("id", { count: "exact", head: false }).eq("role", "Sales"),
-        supabase.from("users").select("id", { count: "exact", head: false }).eq("role", "GM"),
+      const [{ data: salesUsers }, { data: gmUsers }, { data: campaigns }, { data: masterCustomers }] = await Promise.all([
+        supabase.from("users").select("id, nama_lengkap").eq("role", "Sales"),
+        supabase.from("users").select("id").eq("role", "GM"),
+        supabase.from("campaigns").select("id"),
+        supabase.from("master_customers").select("id"),
       ]);
       const totalSales = salesUsers?.length || 0;
       const totalGm = gmUsers?.length || 0;
+      const totalCampaigns = campaigns?.length || 0;
+      const totalMasterCustomers = masterCustomers?.length || 0;
 
-      const [{ data: customers }, { data: activitiesYear }] = await Promise.all([
-        supabase.from("customers").select("id"),
-        supabase
-          .from("activities")
-          .select("id")
-          .gte("tanggal_aktivitas", `${selectedYear}-01-01`)
-          .lte("tanggal_aktivitas", `${selectedYear}-12-31`),
-      ]);
-      const totalCustomers = customers?.length || 0;
-      const activitiesThisYear = activitiesYear?.length || 0;
+      // Calculate totals from campaigns
+      let totalTargetRevenue = 0;
+      let totalPotentialRevenue = 0;
+      let totalAchievementRevenue = 0;
+      const monthly = Array.from({ length: 12 }, () => 0);
 
-      // Closing type id
-      let closingTypeId: string | null = null;
-      {
-        const { data: closingType } = await supabase
-          .from("activity_types")
-          .select("id")
-          .eq("nama_aktivitas", "Closing")
-          .single();
-        closingTypeId = closingType?.id || null;
+      // Get all campaigns
+      const { data: allCampaigns } = await supabase
+        .from("campaigns")
+        .select("id, target_revenue");
+
+      // Calculate target revenue
+      totalTargetRevenue = (allCampaigns || []).reduce((sum: number, camp: any) => {
+        return sum + (Number(camp.target_revenue) || 0);
+      }, 0);
+
+      // Get all campaign IDs
+      const allCampaignIds = (allCampaigns || []).map(c => c.id);
+
+      if (allCampaignIds.length > 0) {
+        // Get all activities for potential and achievement calculation
+        const { data: allActivities } = await supabase
+          .from("campaign_activities")
+          .select("campaign_id, jenis_aktivitas, potential_value, tanggal_aktivitas")
+          .in("campaign_id", allCampaignIds);
+
+        // Calculate potential revenue (latest per campaign)
+        const campaignLatest = new Map<string, { value: number; date: string }>();
+        for (const act of allActivities || []) {
+          const existing = campaignLatest.get(act.campaign_id);
+          if (!existing || new Date(act.tanggal_aktivitas) > new Date(existing.date)) {
+            campaignLatest.set(act.campaign_id, {
+              value: Number(act.potential_value) || 0,
+              date: act.tanggal_aktivitas,
+            });
+          }
+        }
+        totalPotentialRevenue = Array.from(campaignLatest.values()).reduce((sum, v) => sum + v.value, 0);
+
+        // Calculate achievement revenue and monthly revenue
+        for (const act of allActivities || []) {
+          if (act.jenis_aktivitas === "Closing") {
+            const value = Number(act.potential_value) || 0;
+            totalAchievementRevenue += value;
+            
+            // Monthly revenue for selected year
+            const d = new Date(act.tanggal_aktivitas);
+            if (d.getFullYear() === selectedYear) {
+              monthly[d.getMonth()] += value;
+            }
+          }
+        }
       }
 
-      // Targets across org for selected year
-      const { data: targets } = await supabase
-        .from("targets")
-        .select("id, sales_id, target_nilai_revenue, periode_tahun, users:sales_id(nama_lengkap)")
-        .eq("periode_tahun", selectedYear);
-      const totalTargetRevenue = (targets || []).reduce(
-        (sum: number, t: any) => sum + (t.target_nilai_revenue ? Number(t.target_nilai_revenue) : 0),
-        0
-      );
+      setMonthlyRevenue(monthly);
 
-      // Actual revenue across org (sum of customers.nilai_potensial from closing selesai)
-      let totalActualRevenue = 0;
+      // Build sales summaries
       const salesSummaries: SalesSummary[] = [];
-      if (closingTypeId) {
-        const startDate = `${selectedYear}-01-01`;
-        const endDate = `${selectedYear}-12-31`;
+      
+      // Get all campaigns with sales info
+      const { data: allCampaignsWithSales } = await supabase
+        .from("campaigns")
+        .select("id, target_revenue, sales_id, users:sales_id(nama_lengkap)");
 
-        // Build map salesId -> { name, target }
-        const salesMap = new Map<string, { name: string; target: number }>();
-        for (const t of targets || []) {
-          salesMap.set(t.sales_id, {
-            name: (t.users as any)?.nama_lengkap || "Sales",
-            target: Number(t.target_nilai_revenue || 0),
-          });
+      // Group campaigns by sales_id
+      const salesCampaignsMap = new Map<string, any[]>();
+      for (const camp of allCampaignsWithSales || []) {
+        const salesId = camp.sales_id;
+        if (!salesCampaignsMap.has(salesId)) {
+          salesCampaignsMap.set(salesId, []);
         }
-
-        // Get all closing activities for year
-        const { data: closings } = await supabase
-          .from("activities")
-          .select("sales_id, tanggal_aktivitas, customers:customer_id(nilai_potensial)")
-          .eq("jenis_aktivitas_id", closingTypeId)
-          .eq("status_aktivitas", "Selesai")
-          .gte("tanggal_aktivitas", startDate)
-          .lte("tanggal_aktivitas", endDate);
-
-        // Aggregate totals by sales and by month
-        const monthly = Array.from({ length: 12 }, () => 0);
-        const bySales = new Map<string, { actual: number; count: number }>();
-        for (const row of closings || []) {
-          const value = row.customers?.nilai_potensial ? Number(row.customers.nilai_potensial) : 0;
-          totalActualRevenue += value;
-          const d = new Date(row.tanggal_aktivitas);
-          monthly[d.getMonth()] += value;
-          const prev = bySales.get(row.sales_id) || { actual: 0, count: 0 };
-          bySales.set(row.sales_id, { actual: prev.actual + value, count: prev.count + 1 });
-        }
-        setMonthlyRevenue(monthly);
-
-        // Build sales summaries (include those with targets even if actual 0)
-        for (const [salesId, info] of salesMap.entries()) {
-          const agg = bySales.get(salesId) || { actual: 0, count: 0 };
-          salesSummaries.push({
-            salesId,
-            salesName: info.name,
-            targetRevenue: info.target,
-            actualRevenue: agg.actual,
-            closingCount: agg.count,
-          });
-        }
-      } else {
-        setMonthlyRevenue(Array.from({ length: 12 }, () => 0));
+        salesCampaignsMap.get(salesId)!.push(camp);
       }
-      // Sort top sales by actual revenue desc, take top 8
-      salesSummaries.sort((a, b) => b.actualRevenue - a.actualRevenue);
+
+      // Get all activities once
+      const { data: allActivitiesForSummary } = await supabase
+        .from("campaign_activities")
+        .select("campaign_id, jenis_aktivitas, potential_value, tanggal_aktivitas");
+
+      // Group activities by campaign_id
+      const activitiesByCampaign = new Map<string, any[]>();
+      for (const act of allActivitiesForSummary || []) {
+        const campId = act.campaign_id;
+        if (!activitiesByCampaign.has(campId)) {
+          activitiesByCampaign.set(campId, []);
+        }
+        activitiesByCampaign.get(campId)!.push(act);
+      }
+
+      // Calculate for each sales
+      for (const sales of salesUsers || []) {
+        const salesCampaigns = salesCampaignsMap.get(sales.id) || [];
+        
+        const targetRevenue = salesCampaigns.reduce((sum: number, camp: any) => {
+          return sum + (Number(camp.target_revenue) || 0);
+        }, 0);
+
+        let potentialRevenue = 0;
+        let achievementRevenue = 0;
+        
+        for (const campaign of salesCampaigns) {
+          const activities = activitiesByCampaign.get(campaign.id) || [];
+          
+          // Potential: latest activity
+          if (activities.length > 0) {
+            const latest = activities.sort((a, b) => 
+              new Date(b.tanggal_aktivitas).getTime() - new Date(a.tanggal_aktivitas).getTime()
+            )[0];
+            potentialRevenue += Number(latest.potential_value) || 0;
+          }
+
+          // Achievement: all closing
+          achievementRevenue += activities
+            .filter(act => act.jenis_aktivitas === "Closing")
+            .reduce((sum: number, act: any) => sum + (Number(act.potential_value) || 0), 0);
+        }
+
+        salesSummaries.push({
+          salesId: sales.id,
+          salesName: sales.nama_lengkap || "Sales",
+          targetRevenue,
+          potentialRevenue,
+          achievementRevenue,
+          campaignCount: salesCampaigns.length,
+        });
+      }
+
+      // Sort by achievement revenue
+      salesSummaries.sort((a, b) => b.achievementRevenue - a.achievementRevenue);
       setTopSales(salesSummaries.slice(0, 8));
 
       setKpis({
         totalSales,
         totalGm,
-        totalCustomers,
-        activitiesThisYear,
+        totalCampaigns,
+        totalMasterCustomers,
         totalTargetRevenue,
-        totalActualRevenue,
+        totalPotentialRevenue,
+        totalAchievementRevenue,
       });
     };
 
@@ -172,7 +222,7 @@ export function AdminDashboard() {
           <CardDescription className="text-slate-400">Ringkasan keseluruhan sistem penjualan</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
               <div className="text-slate-400 text-xs mb-1">Total Sales</div>
               <div className="text-slate-50 text-2xl font-semibold">{kpis.totalSales}</div>
@@ -182,20 +232,24 @@ export function AdminDashboard() {
               <div className="text-slate-50 text-2xl font-semibold">{kpis.totalGm}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Total Customers</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalCustomers}</div>
+              <div className="text-slate-400 text-xs mb-1">Total Campaigns</div>
+              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalCampaigns}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Aktivitas Tahun Ini</div>
-              <div className="text-slate-50 text-2xl font-semibold">{kpis.activitiesThisYear}</div>
+              <div className="text-slate-400 text-xs mb-1">Master Customers</div>
+              <div className="text-slate-50 text-2xl font-semibold">{kpis.totalMasterCustomers}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Target Revenue {selectedYear}</div>
+              <div className="text-slate-400 text-xs mb-1">Target Revenue</div>
               <div className="text-slate-50 text-2xl font-semibold">Rp {kpis.totalTargetRevenue.toLocaleString('id-ID')}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
-              <div className="text-slate-400 text-xs mb-1">Achievement Revenue {selectedYear}</div>
-              <div className="text-slate-50 text-2xl font-semibold">Rp {kpis.totalActualRevenue.toLocaleString('id-ID')}</div>
+              <div className="text-slate-400 text-xs mb-1">Potential Revenue</div>
+              <div className="text-blue-400 text-2xl font-semibold">Rp {kpis.totalPotentialRevenue.toLocaleString('id-ID')}</div>
+            </div>
+            <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
+              <div className="text-slate-400 text-xs mb-1">Achievement Revenue</div>
+              <div className="text-green-400 text-2xl font-semibold">Rp {kpis.totalAchievementRevenue.toLocaleString('id-ID')}</div>
             </div>
           </div>
         </CardContent>
@@ -203,7 +257,7 @@ export function AdminDashboard() {
 
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Revenue Bulanan (Closing Selesai)</CardTitle>
+          <CardTitle className="text-slate-50">Revenue Bulanan (Closing)</CardTitle>
           <CardDescription className="text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -227,9 +281,6 @@ export function AdminDashboard() {
               })}
             </div>
           )}
-          <div className="mt-2 text-xs text-slate-400">
-            Angka pada batang adalah bulan (1-12). Arahkan kursor untuk melihat nilai.
-          </div>
         </CardContent>
       </Card>
 
@@ -247,7 +298,7 @@ export function AdminDashboard() {
               />
             </div>
           </div>
-          <CardDescription className="text-slate-400">Berdasarkan revenue closing {selectedYear}</CardDescription>
+          <CardDescription className="text-slate-400">Berdasarkan achievement revenue dari campaigns</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredTopSales.length === 0 ? (
@@ -255,12 +306,26 @@ export function AdminDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredTopSales.map((s) => {
-                const percent = s.targetRevenue > 0 ? Math.min((s.actualRevenue / s.targetRevenue) * 100, 100) : 0;
+                const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
                 return (
                   <div key={s.salesId} className="p-4 rounded-lg bg-slate-700 border border-slate-600">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-slate-50">{s.salesName}</h3>
                       <span className="text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                      <div>
+                        <div className="text-slate-400">Target</div>
+                        <div className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Potential</div>
+                        <div className="text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Achievement</div>
+                        <div className="text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
+                      </div>
                     </div>
                     <div className="bg-slate-600 rounded-full h-2 mb-2">
                       <div
@@ -268,11 +333,7 @@ export function AdminDashboard() {
                         style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-sm text-slate-300">
-                      <span>Achievement: <span className="text-slate-50 font-semibold">Rp {s.actualRevenue.toLocaleString('id-ID')}</span></span>
-                      <span>Target: <span className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</span></span>
-                    </div>
-                    <div className="text-sm text-slate-400 mt-1">Closing: {s.closingCount}</div>
+                    <div className="text-sm text-slate-400">Campaign: {s.campaignCount}</div>
                   </div>
                 );
               })}

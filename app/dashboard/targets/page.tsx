@@ -17,66 +17,84 @@ export default async function TargetsPage() {
     .eq("id", user.id)
     .single();
 
-  // Allow Sales to view (read-only), GM/Admin full access
   if (!userProfile) {
     redirect("/dashboard");
   }
 
-  // Get targets
-  let query = supabase.from("targets").select(`
-    *,
-    users:sales_id(nama_lengkap),
-    gm:gm_id(nama_lengkap)
-  `);
+  // Get all sales users based on role
+  let salesQuery = supabase
+    .from("users")
+    .select("id, nama_lengkap")
+    .eq("role", "Sales");
 
   if (userProfile.role === "GM") {
-    query = query.eq("gm_id", user.id);
+    salesQuery = salesQuery.eq("gm_id", user.id);
   } else if (userProfile.role === "Sales") {
-    query = query.eq("sales_id", user.id);
+    salesQuery = salesQuery.eq("id", user.id);
   }
 
-  const { data: targets } = await query.order("periode_tahun", { ascending: false });
+  const { data: salesUsers } = await salesQuery;
 
-  // Compute actual_revenue per target from activities with type 'Closing' and status 'Selesai'
-  let closingTypeId: string | null = null;
-  {
-    const { data: closingType } = await supabase
-      .from("activity_types")
-      .select("id")
-      .eq("nama_aktivitas", "Closing")
-      .single();
-    closingTypeId = closingType?.id || null;
-  }
+  // Calculate target, potential, and achievement revenue from campaigns per sales
+  const salesTargets = [];
+  for (const sales of salesUsers || []) {
+    // Get all campaigns for this sales
+    const { data: campaigns } = await supabase
+      .from("campaigns")
+      .select("id, target_revenue")
+      .eq("sales_id", sales.id);
 
-  const targetsWithActual = [];
-  for (const target of targets || []) {
-    let actualRevenue = 0;
-    if (closingTypeId) {
-      const startDate = `${target.periode_tahun}-01-01`;
-      const endDate = `${target.periode_tahun}-12-31`;
+    // Calculate Target Revenue (sum of all campaign.target_revenue)
+    const targetRevenue = (campaigns || []).reduce((sum: number, camp: any) => {
+      return sum + (Number(camp.target_revenue) || 0);
+    }, 0);
+
+    // Calculate Potential Revenue (latest activity potential_value per campaign, then sum)
+    let potentialRevenue = 0;
+    for (const campaign of campaigns || []) {
+      const { data: activities } = await supabase
+        .from("campaign_activities")
+        .select("potential_value, tanggal_aktivitas")
+        .eq("campaign_id", campaign.id)
+        .order("tanggal_aktivitas", { ascending: false })
+        .limit(1);
+      
+      if (activities && activities.length > 0) {
+        potentialRevenue += Number(activities[0].potential_value) || 0;
+      }
+    }
+
+    // Calculate Achievement Revenue (sum of all Closing activities)
+    let achievementRevenue = 0;
+    for (const campaign of campaigns || []) {
       const { data: closingActivities } = await supabase
-        .from("activities")
-        .select("customers:customer_id(nilai_potensial)")
-        .eq("sales_id", target.sales_id)
-        .eq("jenis_aktivitas_id", closingTypeId)
-        .eq("status_aktivitas", "Selesai")
-        .gte("tanggal_aktivitas", startDate)
-        .lte("tanggal_aktivitas", endDate);
-      actualRevenue = (closingActivities || []).reduce((sum: number, row: any) => {
-        return sum + (row.customers?.nilai_potensial ? Number(row.customers.nilai_potensial) : 0);
+        .from("campaign_activities")
+        .select("potential_value")
+        .eq("campaign_id", campaign.id)
+        .eq("jenis_aktivitas", "Closing");
+      
+      achievementRevenue += (closingActivities || []).reduce((sum: number, act: any) => {
+        return sum + (Number(act.potential_value) || 0);
       }, 0);
     }
-    targetsWithActual.push({ ...target, actual_revenue: actualRevenue });
+
+    salesTargets.push({
+      sales_id: sales.id,
+      sales_name: sales.nama_lengkap,
+      target_revenue: targetRevenue,
+      potential_revenue: potentialRevenue,
+      achievement_revenue: achievementRevenue,
+    });
   }
 
   return (
     <div className="p-8 bg-slate-900 min-h-screen space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-50">Target Penjualan</h1>
-        <p className="text-slate-400 mt-2">Kelola target penjualan tim Anda</p>
+        <p className="text-slate-400 mt-2">Ringkasan target, potential, dan achievement revenue dari semua campaign per sales</p>
       </div>
 
-      <TargetsList initialTargets={targetsWithActual} userRole={userProfile?.role} userId={user.id} />
+      <TargetsList initialTargets={salesTargets} userRole={userProfile?.role} userId={user.id} />
     </div>
   );
 }

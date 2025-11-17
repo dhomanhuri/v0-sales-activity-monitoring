@@ -3,21 +3,21 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, Activity, Target, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Activity, Target, Settings, LogOut, Building2, Megaphone } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from 'next/navigation';
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Customer", href: "/dashboard/customers", icon: Users },
-  { label: "Aktivitas", href: "/dashboard/activities", icon: Activity },
+  { label: "Campaign", href: "/dashboard/campaigns", icon: Megaphone },
   { label: "Target", href: "/dashboard/targets", icon: Target },
   { label: "Pengaturan Profil", href: "/dashboard/profile", icon: Settings },
 ];
 
 const adminMenuItems = [
   { label: "Manajemen User", href: "/dashboard/users", icon: Users },
-  { label: "Master Aktivitas", href: "/dashboard/activity-types", icon: Activity },
+  { label: "Master Customer", href: "/dashboard/master-customers", icon: Building2 },
+  { label: "Master Campaign", href: "/dashboard/master-campaigns", icon: Megaphone },
 ];
 
 export function Sidebar({ user }: { user: any }) {
@@ -46,21 +46,25 @@ export function Sidebar({ user }: { user: any }) {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-auto">
-        {menuItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-              pathname === item.href
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-700 hover:text-white"
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            {item.label}
-          </Link>
-        ))}
+        {menuItems.map((item) => {
+          const isActive = pathname === item.href || 
+            (item.href === "/dashboard/campaigns" && pathname?.startsWith("/dashboard/campaigns"));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-blue-600 text-white"
+                  : "text-slate-300 hover:bg-slate-700 hover:text-white"
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+              {item.label}
+            </Link>
+          );
+        })}
 
         {user?.role === "Admin" && (
           <>

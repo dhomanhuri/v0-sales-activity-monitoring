@@ -14,8 +14,9 @@ type TeamSummary = {
   salesId: string;
   salesName: string;
   targetRevenue: number;
-  actualRevenue: number;
-  closingCount: number;
+  potentialRevenue: number;
+  achievementRevenue: number;
+  campaignCount: number;
 };
 
 export function GMDashboard({ userId }: { userId: string }) {
@@ -43,91 +44,124 @@ export function GMDashboard({ userId }: { userId: string }) {
         .eq("gm_id", userId);
       setTeam(teamUsers || []);
 
-      // Prepare closing type id
-      let closingTypeId: string | null = null;
-      {
-        const { data: closingType } = await supabase
-          .from("activity_types")
-          .select("id")
-          .eq("nama_aktivitas", "Closing")
-          .single();
-        closingTypeId = closingType?.id || null;
-      }
-
-      // For each sales, get target for currentYear and compute actual revenue from closings
+      // For each sales, calculate from campaigns
       const teamSummaries: TeamSummary[] = [];
       for (const member of teamUsers || []) {
-        const { data: targetRow } = await supabase
-          .from("targets")
-          .select("id, target_nilai_revenue, sales_id, periode_tahun")
-          .eq("sales_id", member.id)
-          .eq("periode_tahun", selectedYear)
-          .maybeSingle();
+        // Get all campaigns for this sales
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id, target_revenue")
+          .eq("sales_id", member.id);
 
-        let actualRevenue = 0;
-        let closingCount = 0;
-        if (closingTypeId) {
-          const startDate = `${selectedYear}-01-01`;
-          const endDate = `${selectedYear}-12-31`;
+        // Calculate Target Revenue (sum of all campaign.target_revenue)
+        const targetRevenue = (campaigns || []).reduce((sum: number, camp: any) => {
+          return sum + (Number(camp.target_revenue) || 0);
+        }, 0);
+
+        // Calculate Potential Revenue (latest activity potential_value per campaign, then sum)
+        let potentialRevenue = 0;
+        for (const campaign of campaigns || []) {
+          const { data: activities } = await supabase
+            .from("campaign_activities")
+            .select("potential_value, tanggal_aktivitas")
+            .eq("campaign_id", campaign.id)
+            .order("tanggal_aktivitas", { ascending: false })
+            .limit(1);
+          
+          if (activities && activities.length > 0) {
+            potentialRevenue += Number(activities[0].potential_value) || 0;
+          }
+        }
+
+        // Calculate Achievement Revenue (sum of all Closing activities)
+        let achievementRevenue = 0;
+        for (const campaign of campaigns || []) {
           const { data: closingActivities } = await supabase
-            .from("activities")
-            .select("id, customers:customer_id(nilai_potensial)")
-            .eq("sales_id", member.id)
-            .eq("jenis_aktivitas_id", closingTypeId)
-            .eq("status_aktivitas", "Selesai")
-            .gte("tanggal_aktivitas", startDate)
-            .lte("tanggal_aktivitas", endDate);
-          closingCount = closingActivities?.length || 0;
-          actualRevenue = (closingActivities || []).reduce((sum: number, row: any) => {
-            return sum + (row.customers?.nilai_potensial ? Number(row.customers.nilai_potensial) : 0);
+            .from("campaign_activities")
+            .select("potential_value")
+            .eq("campaign_id", campaign.id)
+            .eq("jenis_aktivitas", "Closing");
+          
+          achievementRevenue += (closingActivities || []).reduce((sum: number, act: any) => {
+            return sum + (Number(act.potential_value) || 0);
           }, 0);
         }
 
         teamSummaries.push({
           salesId: member.id,
           salesName: member.nama_lengkap,
-          targetRevenue: Number(targetRow?.target_nilai_revenue || 0),
-          actualRevenue,
-          closingCount,
+          targetRevenue,
+          potentialRevenue,
+          achievementRevenue,
+          campaignCount: campaigns?.length || 0,
         });
       }
       setSummaries(teamSummaries);
 
-      // Load recent activities from the team (last 10)
-      const { data: recent } = await supabase
-        .from("activities")
-        .select(`
-          id,
-          tanggal_aktivitas,
-          status_aktivitas,
-          activity_types:jenis_aktivitas_id(nama_aktivitas),
-          customers:customer_id(nama_perusahaan),
-          users:sales_id(nama_lengkap)
-        `)
-        .in("sales_id", (teamUsers || []).map(u => u.id))
-        .order("tanggal_aktivitas", { ascending: false })
-        .limit(10);
-      setRecentActivities(recent || []);
-
-      // Build monthly revenue across the team based on closing activities in selectedYear
-      if (closingTypeId && (teamUsers || []).length > 0) {
-        const startDate = `${selectedYear}-01-01`;
-        const endDate = `${selectedYear}-12-31`;
-        const { data: teamClosings } = await supabase
-          .from("activities")
-          .select("tanggal_aktivitas, customers:customer_id(nilai_potensial)")
-          .in("sales_id", (teamUsers || []).map(u => u.id))
-          .eq("jenis_aktivitas_id", closingTypeId)
-          .eq("status_aktivitas", "Selesai")
-          .gte("tanggal_aktivitas", startDate)
-          .lte("tanggal_aktivitas", endDate);
-        const monthly = Array.from({ length: 12 }, () => 0);
-        for (const row of teamClosings || []) {
-          const d = new Date(row.tanggal_aktivitas);
-          const m = d.getMonth(); // 0..11
-          monthly[m] += row.customers?.nilai_potensial ? Number(row.customers.nilai_potensial) : 0;
+      // Load recent activities from campaign_activities (last 10)
+      const teamIds = (teamUsers || []).map(u => u.id);
+      if (teamIds.length > 0) {
+        // First get campaigns for team
+        const { data: teamCampaigns } = await supabase
+          .from("campaigns")
+          .select("id")
+          .in("sales_id", teamIds);
+        
+        const campaignIds = (teamCampaigns || []).map(c => c.id);
+        
+        if (campaignIds.length > 0) {
+          const { data: recent } = await supabase
+            .from("campaign_activities")
+            .select(`
+              id,
+              jenis_aktivitas,
+              keterangan,
+              tanggal_aktivitas,
+              potential_value,
+              campaign_id,
+              campaigns:campaign_id(
+                master_customers:customer_id(name),
+                master_campaigns:campaign_id(name),
+                users:sales_id(nama_lengkap)
+              )
+            `)
+            .in("campaign_id", campaignIds)
+            .order("tanggal_aktivitas", { ascending: false })
+            .limit(10);
+          setRecentActivities(recent || []);
         }
-        setMonthlyRevenue(monthly);
+      }
+
+      // Build monthly revenue from Closing activities in selectedYear
+      if ((teamUsers || []).length > 0) {
+        const teamIds = (teamUsers || []).map(u => u.id);
+        const { data: campaigns } = await supabase
+          .from("campaigns")
+          .select("id")
+          .in("sales_id", teamIds);
+        
+        const campaignIds = (campaigns || []).map(c => c.id);
+        if (campaignIds.length > 0) {
+          const startDate = `${selectedYear}-01-01`;
+          const endDate = `${selectedYear}-12-31`;
+          const { data: closings } = await supabase
+            .from("campaign_activities")
+            .select("tanggal_aktivitas, potential_value")
+            .in("campaign_id", campaignIds)
+            .eq("jenis_aktivitas", "Closing")
+            .gte("tanggal_aktivitas", startDate)
+            .lte("tanggal_aktivitas", endDate);
+          
+          const monthly = Array.from({ length: 12 }, () => 0);
+          for (const row of closings || []) {
+            const d = new Date(row.tanggal_aktivitas);
+            const m = d.getMonth();
+            monthly[m] += Number(row.potential_value) || 0;
+          }
+          setMonthlyRevenue(monthly);
+        } else {
+          setMonthlyRevenue(Array.from({ length: 12 }, () => 0));
+        }
       } else {
         setMonthlyRevenue(Array.from({ length: 12 }, () => 0));
       }
@@ -160,7 +194,7 @@ export function GMDashboard({ userId }: { userId: string }) {
             </div>
           </div>
           <CardDescription className="text-slate-400">
-            Monitoring performa penjualan tim Anda di tahun {selectedYear}
+            Monitoring performa penjualan tim Anda
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -179,12 +213,26 @@ export function GMDashboard({ userId }: { userId: string }) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredSummaries.map((s) => {
-                const percent = s.targetRevenue > 0 ? Math.min((s.actualRevenue / s.targetRevenue) * 100, 100) : 0;
+                const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
                 return (
                   <div key={s.salesId} className="p-4 rounded-lg bg-slate-700 border border-slate-600">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-slate-50">{s.salesName}</h3>
                       <span className="text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                      <div>
+                        <div className="text-slate-400">Target</div>
+                        <div className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Potential</div>
+                        <div className="text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-400">Achievement</div>
+                        <div className="text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
+                      </div>
                     </div>
                     <div className="bg-slate-600 rounded-full h-2 mb-2">
                       <div
@@ -192,11 +240,7 @@ export function GMDashboard({ userId }: { userId: string }) {
                         style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <div className="flex justify-between text-sm text-slate-300">
-                      <span>Achievement: <span className="text-slate-50 font-semibold">Rp {s.actualRevenue.toLocaleString('id-ID')}</span></span>
-                      <span>Target: <span className="text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</span></span>
-                    </div>
-                    <div className="text-sm text-slate-400 mt-1">Closing: {s.closingCount}</div>
+                    <div className="text-sm text-slate-400">Campaign: {s.campaignCount}</div>
                   </div>
                 );
               })}
@@ -207,7 +251,7 @@ export function GMDashboard({ userId }: { userId: string }) {
 
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-50">Revenue Bulanan (Closing Selesai)</CardTitle>
+          <CardTitle className="text-slate-50">Revenue Bulanan (Closing)</CardTitle>
           <CardDescription className="text-slate-400">Distribusi revenue per bulan di {selectedYear}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -231,9 +275,6 @@ export function GMDashboard({ userId }: { userId: string }) {
               })}
             </div>
           )}
-          <div className="mt-2 text-xs text-slate-400">
-            Angka pada batang adalah bulan (1-12). Arahkan kursor untuk melihat nilai.
-          </div>
         </CardContent>
       </Card>
 
@@ -246,23 +287,27 @@ export function GMDashboard({ userId }: { userId: string }) {
           {recentActivities.length === 0 ? (
             <p className="text-slate-400">Belum ada aktivitas.</p>
           ) : (
-            recentActivities.map((a) => (
-              <div key={a.id} className="p-3 rounded-lg bg-slate-700 border border-slate-600">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-slate-50 text-sm">
-                      {(a.activity_types as any)?.nama_aktivitas} • {(a.customers as any)?.nama_perusahaan}
+            recentActivities.map((a) => {
+              const campaign = (a.campaigns as any);
+              return (
+                <div key={a.id} className="p-3 rounded-lg bg-slate-700 border border-slate-600">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-slate-50 text-sm">
+                        {a.jenis_aktivitas} • {campaign?.master_customers?.name} - {campaign?.master_campaigns?.name}
+                      </div>
+                      <div className="text-slate-400 text-xs">
+                        {new Date(a.tanggal_aktivitas).toLocaleDateString('id-ID')}
+                      </div>
                     </div>
                     <div className="text-slate-400 text-xs">
-                      {new Date(a.tanggal_aktivitas).toLocaleDateString('id-ID')}
+                      {campaign?.users?.nama_lengkap}
+                      {a.potential_value && ` • Rp ${Number(a.potential_value).toLocaleString('id-ID')}`}
                     </div>
                   </div>
-                  <div className="text-slate-400 text-xs">
-                    {(a.users as any)?.nama_lengkap} • {a.status_aktivitas}
-                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </CardContent>
       </Card>
