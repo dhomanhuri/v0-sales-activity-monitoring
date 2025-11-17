@@ -51,28 +51,15 @@ export default function LoginPage() {
         <div className="flex flex-col gap-6">
           <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl">
             <CardHeader className="space-y-2 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className=" p-3">
-                  {/* <svg
-                    className="h-6 w-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg> */}
-                  <img src="/logo.png" alt="logo" width={100}/>
+              <div className="mb-1 flex justify-center">
+                <div className=" pt-3">
+                  <img src="/logo.png" alt="logo" width={250}/>
                 </div>
               </div>
-              <CardTitle className="text-3xl font-bold text-slate-900 dark:text-slate-50">
+              <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                 Campaign Monitoring
               </CardTitle>
-              <CardDescription className="text-slate-600 dark:text-slate-300">
+              <CardDescription className="text-slate-600  dark:text-slate-300" style={{marginTop: '-10px'}}>
                 Sales Activity Monitoring System
               </CardDescription>
             </CardHeader>
