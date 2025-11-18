@@ -258,7 +258,12 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                 // Get potential value from the latest activity for this customer
                 // Activities are already sorted by tanggal_aktivitas descending in groupedActivities
                 const latestActivity = group.activities.length > 0 ? group.activities[0] : null;
-                const totalPotential = latestActivity ? (parseFloat(latestActivity.potential_value) || 0) : 0;
+                const potentialValue = latestActivity ? (parseFloat(latestActivity.potential_value) || 0) : 0;
+                
+                // Calculate achievement revenue (sum of all Closing activities for this customer)
+                const achievementRevenue = group.activities
+                  .filter((act: any) => act.jenis_aktivitas === "Closing")
+                  .reduce((sum: number, act: any) => sum + (parseFloat(act.potential_value) || 0), 0);
                 
                 return (
                   <div
@@ -280,12 +285,21 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                           <h3 className="font-semibold text-slate-900 dark:text-slate-50">
                             {group.customerName}
                           </h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                            {activityCount} {activityCount === 1 ? 'activity' : 'activities'}
-                            {totalPotential > 0 && (
-                              <> • Total Potential: Rp {totalPotential.toLocaleString('id-ID')}</>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <p className="text-xs text-slate-600 dark:text-slate-400">
+                              {activityCount} {activityCount === 1 ? 'activity' : 'activities'}
+                            </p>
+                            {potentialValue > 0 && (
+                              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                Potential Value: Rp {potentialValue.toLocaleString('id-ID')}
+                              </span>
                             )}
-                          </p>
+                            {achievementRevenue > 0 && (
+                              <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                                Achievement Revenue: Rp {achievementRevenue.toLocaleString('id-ID')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </button>
