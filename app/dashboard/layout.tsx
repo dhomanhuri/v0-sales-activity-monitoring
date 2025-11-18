@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { Chatbot } from "@/components/chatbot/chatbot";
 
 export default async function DashboardLayout({
   children,
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
+      <Chatbot />
     </div>
   );
 }

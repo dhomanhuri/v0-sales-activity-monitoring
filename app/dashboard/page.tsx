@@ -36,15 +36,15 @@ export default async function DashboardPage() {
               {userProfile.role === 'Sales' && 'Summary of your sales activities'}
               {userProfile.role === 'GM' && 'Your sales team performance'}
               {userProfile.role === 'Admin' && 'Overall system summary'}
-            </p>
+        </p>
           </div>
         </div>
       </div>
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-        {userProfile.role === 'Sales' && <SalesDashboard userId={user.id} />}
-        {userProfile.role === 'GM' && <GMDashboard userId={user.id} />}
-        {userProfile.role === 'Admin' && <AdminDashboard />}
+      {userProfile.role === 'Sales' && <SalesDashboard userId={user.id} />}
+      {userProfile.role === 'GM' && <GMDashboard userId={user.id} />}
+      {userProfile.role === 'Admin' && <AdminDashboard />}
       </div>
     </div>
   );
