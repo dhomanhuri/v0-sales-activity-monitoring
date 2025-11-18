@@ -21,10 +21,16 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const groupedActivities = useMemo(() => {
     const groups = new Map<string, any[]>();
     
-    // Sort activities by tanggal_aktivitas descending
+    // Sort activities by tanggal_aktivitas descending (newest first)
     const sortedActivities = [...activities].sort((a: any, b: any) => {
       const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
       const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+      // If dates are equal, use created_at as tie-breaker
+      if (dateB === dateA) {
+        const createdA = new Date(a.created_at || 0).getTime();
+        const createdB = new Date(b.created_at || 0).getTime();
+        return createdB - createdA;
+      }
       return dateB - dateA;
     });
     
@@ -38,10 +44,11 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
       groups.get(customerId)!.push(activity);
     }
     
+    // Ensure activities in each group are sorted (they should be since we iterate sortedActivities)
     return Array.from(groups.entries()).map(([customerId, activities]) => ({
       customerId,
       customerName: activities[0]?.master_customers?.name || 'No Customer',
-      activities,
+      activities, // activities[0] is the latest activity for this customer
     }));
   }, [activities]);
 
@@ -190,7 +197,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         </Card>
         <Card className="bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-slate-800 border-purple-200 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">Progress</CardTitle>
+            <CardTitle className="text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">Achievement Rate (%)</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-3">
@@ -248,10 +255,10 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                 const isExpanded = expandedCustomers.has(group.customerId);
                 const activityCount = group.activities.length;
                 
-                // Calculate total potential value for this customer
-                const totalPotential = group.activities.reduce((sum: number, act: any) => {
-                  return sum + (parseFloat(act.potential_value) || 0);
-                }, 0);
+                // Get potential value from the latest activity for this customer
+                // Activities are already sorted by tanggal_aktivitas descending in groupedActivities
+                const latestActivity = group.activities.length > 0 ? group.activities[0] : null;
+                const totalPotential = latestActivity ? (parseFloat(latestActivity.potential_value) || 0) : 0;
                 
                 return (
                   <div
