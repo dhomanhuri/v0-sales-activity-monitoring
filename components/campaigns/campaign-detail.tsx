@@ -137,16 +137,20 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           <ArrowLeft className="h-5 w-5 mr-2" />
           Back
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
             {(campaign.master_campaigns as any)?.name}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            
-            {campaign.target_revenue && (
-              <>  Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}</>
-            )}
-          </p>
+          {(campaign.master_campaigns as any)?.description && (
+            <p className="text-slate-600 dark:text-slate-400 mt-2 text-base">
+              {(campaign.master_campaigns as any)?.description}
+            </p>
+          )}
+          {campaign.target_revenue && (
+            <p className="text-slate-500 dark:text-slate-500 mt-2 text-sm font-medium">
+              Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}
+            </p>
+          )}
         </div>
       </div>
 
