@@ -31,6 +31,9 @@ export default async function TargetsPage() {
     salesQuery = salesQuery.eq("gm_id", user.id);
   } else if (userProfile.role === "Sales") {
     salesQuery = salesQuery.eq("id", user.id);
+  } else if (userProfile.role === "Presales" || userProfile.role === "Admin") {
+    // Presales and Admin can see all sales
+    // No filter needed
   }
 
   const { data: salesUsers } = await salesQuery;

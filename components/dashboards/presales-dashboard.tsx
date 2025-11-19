@@ -10,11 +10,10 @@ type SalesSummary = {
   salesName: string;
   targetRevenue: number;
   potentialRevenue: number;
-  achievementRevenue: number;
   campaignCount: number;
 };
 
-export function AdminDashboard() {
+export function PresalesDashboard() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const yearOptions = useMemo(() => {
@@ -29,10 +28,8 @@ export function AdminDashboard() {
     totalMasterCustomers: 0,
     totalTargetRevenue: 0,
     totalPotentialRevenue: 0,
-    totalAchievementRevenue: 0,
   });
   const [topSales, setTopSales] = useState<SalesSummary[]>([]);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(Array.from({ length: 12 }, () => 0));
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -54,8 +51,6 @@ export function AdminDashboard() {
       // Calculate totals from campaigns
       let totalTargetRevenue = 0;
       let totalPotentialRevenue = 0;
-      let totalAchievementRevenue = 0;
-      const monthly = Array.from({ length: 12 }, () => 0);
 
       // Get all campaigns
       const { data: allCampaigns } = await supabase
@@ -71,10 +66,10 @@ export function AdminDashboard() {
       const allCampaignIds = (allCampaigns || []).map(c => c.id);
 
       if (allCampaignIds.length > 0) {
-        // Get all activities for potential and achievement calculation
+        // Get all activities for potential calculation
         const { data: allActivities } = await supabase
           .from("campaign_activities")
-          .select("campaign_id, customer_id, jenis_aktivitas, potential_value, tanggal_aktivitas, created_at")
+          .select("campaign_id, customer_id, potential_value, tanggal_aktivitas, created_at")
           .in("campaign_id", allCampaignIds);
 
         // Calculate potential revenue (akumulasi potential value terakhir tiap customer per campaign)
@@ -113,25 +108,9 @@ export function AdminDashboard() {
             }
           }
         }
-
-        // Calculate achievement revenue and monthly revenue
-        for (const act of allActivities || []) {
-          if (act.jenis_aktivitas === "Closing") {
-            const value = Number(act.potential_value) || 0;
-            totalAchievementRevenue += value;
-            
-            // Monthly revenue for selected year
-            const d = new Date(act.tanggal_aktivitas);
-            if (d.getFullYear() === selectedYear) {
-              monthly[d.getMonth()] += value;
-            }
-          }
-        }
       }
 
-      setMonthlyRevenue(monthly);
-
-      // Build sales summaries
+      // Build sales summaries (without achievement revenue)
       const salesSummaries: SalesSummary[] = [];
       
       // Get all campaigns with sales info
@@ -152,7 +131,7 @@ export function AdminDashboard() {
       // Get all activities once
       const { data: allActivitiesForSummary } = await supabase
         .from("campaign_activities")
-        .select("campaign_id, customer_id, jenis_aktivitas, potential_value, tanggal_aktivitas, created_at");
+        .select("campaign_id, customer_id, potential_value, tanggal_aktivitas, created_at");
 
       // Group activities by campaign_id
       const activitiesByCampaign = new Map<string, any[]>();
@@ -164,7 +143,7 @@ export function AdminDashboard() {
         activitiesByCampaign.get(campId)!.push(act);
       }
 
-      // Calculate for each sales
+      // Calculate for each sales (without achievement revenue)
       for (const sales of salesUsers || []) {
         const salesCampaigns = salesCampaignsMap.get(sales.id) || [];
         
@@ -173,7 +152,6 @@ export function AdminDashboard() {
         }, 0);
 
         let potentialRevenue = 0;
-        let achievementRevenue = 0;
         
         for (const campaign of salesCampaigns) {
           const activities = activitiesByCampaign.get(campaign.id) || [];
@@ -201,11 +179,6 @@ export function AdminDashboard() {
               potentialRevenue += Number(activity.potential_value) || 0;
             }
           }
-
-          // Achievement: all closing
-          achievementRevenue += activities
-            .filter(act => act.jenis_aktivitas === "Closing")
-            .reduce((sum: number, act: any) => sum + (Number(act.potential_value) || 0), 0);
         }
 
         salesSummaries.push({
@@ -213,13 +186,12 @@ export function AdminDashboard() {
           salesName: sales.nama_lengkap || "Sales",
           targetRevenue,
           potentialRevenue,
-          achievementRevenue,
           campaignCount: salesCampaigns.length,
         });
       }
 
-      // Sort by achievement revenue
-      salesSummaries.sort((a, b) => b.achievementRevenue - a.achievementRevenue);
+      // Sort by potential revenue
+      salesSummaries.sort((a, b) => b.potentialRevenue - a.potentialRevenue);
       setTopSales(salesSummaries.slice(0, 8));
 
       setKpis({
@@ -229,7 +201,6 @@ export function AdminDashboard() {
         totalMasterCustomers,
         totalTargetRevenue,
         totalPotentialRevenue,
-        totalAchievementRevenue,
       });
     };
 
@@ -245,7 +216,7 @@ export function AdminDashboard() {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">System Overview</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">System Overview (Read-Only)</CardTitle>
             <div className="flex items-center gap-2">
               <span className="text-slate-600 dark:text-slate-400 text-sm">Year</span>
               <select
@@ -259,10 +230,10 @@ export function AdminDashboard() {
               </select>
             </div>
           </div>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Overall sales system summary</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Overall sales system summary (Read-Only Access)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
               <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Sales</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalSales}</div>
@@ -287,47 +258,14 @@ export function AdminDashboard() {
               <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Potential Leads Revenue</div>
               <div className="text-blue-600 dark:text-blue-400 text-2xl font-semibold">Rp {kpis.totalPotentialRevenue.toLocaleString('id-ID')}</div>
             </div>
-            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Achievement Revenue</div>
-              <div className="text-green-600 dark:text-green-400 text-2xl font-semibold">Rp {kpis.totalAchievementRevenue.toLocaleString('id-ID')}</div>
-            </div>
           </div>
         </CardContent>
       </Card>
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {selectedYear}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-600 dark:text-slate-400">No revenue for this year yet.</p>
-          ) : (
-            <div className="grid grid-cols-12 gap-2 items-end h-40">
-              {monthlyRevenue.map((value, idx) => {
-                const max = Math.max(...monthlyRevenue);
-                const heightPct = max > 0 ? Math.max((value / max) * 100, 4) : 4;
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-full bg-indigo-500 rounded-t"
-                      style={{ height: `${heightPct}%` }}
-                      title={`Rp ${value.toLocaleString('id-ID')}`}
-                    />
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400">{idx + 1}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Top Sales by Achievement</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Top Sales by Potential</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -338,7 +276,7 @@ export function AdminDashboard() {
               />
             </div>
           </div>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Berdasarkan achievement revenue dari campaigns</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Berdasarkan potential revenue dari campaigns</CardDescription>
         </CardHeader>
         <CardContent>
           {filteredTopSales.length === 0 ? (
@@ -346,14 +284,12 @@ export function AdminDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredTopSales.map((s) => {
-                const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
                 return (
                   <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
-                      <span className="text-slate-600 dark:text-slate-400 text-sm">{percent.toFixed(0)}%</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
                       <div>
                         <div className="text-slate-600 dark:text-slate-400">Target</div>
                         <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
@@ -362,16 +298,6 @@ export function AdminDashboard() {
                         <div className="text-slate-600 dark:text-slate-400">Potential</div>
                         <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
-                      <div>
-                        <div className="text-slate-600 dark:text-slate-400">Achievement</div>
-                        <div className="text-green-600 dark:text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
-                      </div>
-                    </div>
-                    <div className="bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
-                      <div
-                        className="bg-orange-500 h-2 rounded-full"
-                        style={{ width: `${percent}%` }}
-                      />
                     </div>
                     <div className="text-sm text-slate-600 dark:text-slate-400">Campaign: {s.campaignCount}</div>
                   </div>
@@ -384,3 +310,4 @@ export function AdminDashboard() {
     </div>
   );
 }
+

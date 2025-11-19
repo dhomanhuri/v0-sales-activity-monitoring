@@ -35,6 +35,9 @@ export default async function ActivitiesPage() {
     
     const subordinateIds = subordinates?.map(s => s.id) || [];
     query = query.in("sales_id", subordinateIds.length > 0 ? subordinateIds : [""]);
+  } else if (userProfile?.role === "Presales") {
+    // Presales can see all activities (read-only)
+    // No filter needed
   }
 
   const { data: activities } = await query.order("tanggal_aktivitas", { ascending: false });

@@ -15,7 +15,8 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const [editingActivity, setEditingActivity] = useState<any>(null);
   const [expandedCustomers, setExpandedCustomers] = useState<Set<string>>(new Set());
 
-  const canEdit = userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId;
+  const canEdit = (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && userRole !== "Presales";
+  const isPresales = userRole === "Presales";
 
   // Group activities by customer
   const groupedActivities = useMemo(() => {
@@ -175,7 +176,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
         </Card>
         <Card className="bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800 dark:to-slate-800 border-blue-200 dark:border-blue-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
           <CardHeader className="pb-3">
-            <CardTitle className="text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider">Potential Revenue</CardTitle>
+            <CardTitle className="text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider">Potential Leads</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">
@@ -184,38 +185,42 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
             <div className="h-1 w-12 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mt-2"></div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-white to-green-50/30 dark:from-slate-800 dark:to-slate-800 border-green-200 dark:border-green-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-green-600 dark:text-green-400 text-xs font-semibold uppercase tracking-wider">Achievement Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
-              Rp {achievementRevenue.toLocaleString('id-ID')}
-            </p>
-            <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-green-600 rounded-full mt-2"></div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-slate-800 border-purple-200 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">Achievement Rate (%)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-3">
-              {campaign.target_revenue ? 
-                `${((achievementRevenue / campaign.target_revenue) * 100).toFixed(1)}%` : 
-                'N/A'
-              }
-            </p>
-            {campaign.target_revenue && (
-              <div className="mt-2 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
-                <div
-                  className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 shadow-sm"
-                  style={{ width: `${Math.min((achievementRevenue / campaign.target_revenue) * 100, 100)}%` }}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {!isPresales && (
+          <Card className="bg-gradient-to-br from-white to-green-50/30 dark:from-slate-800 dark:to-slate-800 border-green-200 dark:border-green-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-green-600 dark:text-green-400 text-xs font-semibold uppercase tracking-wider">Achievement Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">
+                Rp {achievementRevenue.toLocaleString('id-ID')}
+              </p>
+              <div className="h-1 w-12 bg-gradient-to-r from-green-400 to-green-600 rounded-full mt-2"></div>
+            </CardContent>
+          </Card>
+        )}
+        {!isPresales && (
+          <Card className="bg-gradient-to-br from-white to-purple-50/30 dark:from-slate-800 dark:to-slate-800 border-purple-200 dark:border-purple-700/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-purple-600 dark:text-purple-400 text-xs font-semibold uppercase tracking-wider">Achievement Rate (%)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-3">
+                {campaign.target_revenue ? 
+                  `${((achievementRevenue / campaign.target_revenue) * 100).toFixed(1)}%` : 
+                  'N/A'
+                }
+              </p>
+              {campaign.target_revenue && (
+                <div className="mt-2 bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden shadow-inner">
+                  <div
+                    className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 shadow-sm"
+                    style={{ width: `${Math.min((achievementRevenue / campaign.target_revenue) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg">
@@ -291,10 +296,10 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                             </p>
                             {potentialValue > 0 && (
                               <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                                Potential Value: Rp {potentialValue.toLocaleString('id-ID')}
+                                Potential Leads: Rp {potentialValue.toLocaleString('id-ID')}
                               </span>
                             )}
-                            {achievementRevenue > 0 && (
+                            {!isPresales && achievementRevenue > 0 && (
                               <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                                 Achievement Revenue: Rp {achievementRevenue.toLocaleString('id-ID')}
                               </span>

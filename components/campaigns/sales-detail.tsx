@@ -13,6 +13,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
   const [showDialog, setShowDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const router = useRouter();
+  const isPresales = userRole === "Presales";
 
   const handleCampaignSaved = (updatedCampaign: any) => {
     if (editingCampaign) {
@@ -56,16 +57,18 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">Campaign - {sales.nama_lengkap}</h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">Manage campaigns for this sales</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingCampaign(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-        >
-          <Plus className="h-4 w-4" />
-          Add Campaign
-        </Button>
+        {!isPresales && (
+          <Button
+            onClick={() => {
+              setEditingCampaign(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Campaign
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -116,7 +119,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {(userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && (
+                      {!isPresales && (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && (
                         <>
                           <Button
                             variant="ghost"

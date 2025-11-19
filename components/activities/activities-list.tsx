@@ -21,6 +21,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showDialog, setShowDialog] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
+  const isPresales = userRole === "Presales";
 
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =
@@ -79,16 +80,18 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
           <option value="In Progress">In Progress</option>
           <option value="Selesai">Completed</option>
         </select>
-        <Button
-          onClick={() => {
-            setEditingActivity(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Add Activity
-        </Button>
+        {!isPresales && (
+          <Button
+            onClick={() => {
+              setEditingActivity(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Activity
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -133,27 +136,29 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
                         {activity.catatan && <span>Notes: {activity.catatan}</span>}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingActivity(activity);
-                          setShowDialog(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteActivity(activity.id)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {!isPresales && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingActivity(activity);
+                            setShowDialog(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteActivity(activity.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

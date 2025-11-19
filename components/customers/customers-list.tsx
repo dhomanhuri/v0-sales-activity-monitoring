@@ -26,6 +26,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const isPresales = userRole === "Presales";
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =
@@ -87,16 +88,18 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
           <option value="Closed Won">Closed Won</option>
           <option value="Closed Lost">Closed Lost</option>
         </select>
-        <Button
-          onClick={() => {
-            setEditingCustomer(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Add Customer
-        </Button>
+        {!isPresales && (
+          <Button
+            onClick={() => {
+              setEditingCustomer(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Customer
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -147,31 +150,33 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
                         <span>City: {customer.kota}</span>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingCustomer(customer);
-                          setShowDialog(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCustomer(customer.id);
-                        }}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {!isPresales && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCustomer(customer);
+                            setShowDialog(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCustomer(customer.id);
+                          }}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -31,6 +31,9 @@ export default async function CustomersPage() {
     
     const subordinateIds = subordinates?.map(s => s.id) || [];
     query = query.in("sales_id", subordinateIds.length > 0 ? subordinateIds : [""]);
+  } else if (userProfile?.role === "Presales") {
+    // Presales can see all customers (read-only)
+    // No filter needed
   }
 
   const { data: customers } = await query.order("created_at", { ascending: false });

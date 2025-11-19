@@ -72,6 +72,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
           <option value="Admin">Admin</option>
           <option value="GM">General Manager</option>
           <option value="Sales">Sales</option>
+          <option value="Presales">Presales</option>
         </select>
         <Button
           onClick={() => {
@@ -127,6 +128,8 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                               ? "bg-red-900 text-red-200"
                               : user.role === "GM"
                               ? "bg-blue-900 text-blue-200"
+                              : user.role === "Presales"
+                              ? "bg-purple-900 text-purple-200"
                               : "bg-green-900 text-green-200"
                           }
                         >

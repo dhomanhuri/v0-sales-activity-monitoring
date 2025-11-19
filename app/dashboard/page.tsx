@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { SalesDashboard } from "@/components/dashboards/sales-dashboard";
 import { GMDashboard } from "@/components/dashboards/gm-dashboard";
 import { AdminDashboard } from "@/components/dashboards/admin-dashboard";
+import { PresalesDashboard } from "@/components/dashboards/presales-dashboard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
               {userProfile.role === 'Sales' && 'Summary of your sales activities'}
               {userProfile.role === 'GM' && 'Your sales team performance'}
               {userProfile.role === 'Admin' && 'Overall system summary'}
+              {userProfile.role === 'Presales' && 'System overview (Read-Only)'}
         </p>
           </div>
         </div>
@@ -45,6 +47,7 @@ export default async function DashboardPage() {
       {userProfile.role === 'Sales' && <SalesDashboard userId={user.id} />}
       {userProfile.role === 'GM' && <GMDashboard userId={user.id} />}
       {userProfile.role === 'Admin' && <AdminDashboard />}
+      {userProfile.role === 'Presales' && <PresalesDashboard />}
       </div>
     </div>
   );

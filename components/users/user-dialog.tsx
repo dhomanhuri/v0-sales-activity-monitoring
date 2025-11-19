@@ -73,7 +73,7 @@ export function UserDialog({
           .update({
             nama_lengkap: formData.nama_lengkap,
             role: formData.role,
-            gm_id: formData.gm_id || null,
+            gm_id: formData.role === "Sales" ? (formData.gm_id || null) : null,
             status_aktif: formData.status_aktif,
             updated_at: new Date().toISOString(),
           })
@@ -186,6 +186,7 @@ export function UserDialog({
               <option value="Sales">Sales</option>
               <option value="GM">General Manager</option>
               <option value="Admin">Admin</option>
+              <option value="Presales">Presales</option>
             </select>
           </div>
 

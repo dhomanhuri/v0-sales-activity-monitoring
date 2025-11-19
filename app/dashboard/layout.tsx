@@ -24,6 +24,11 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single();
 
+  // If user profile doesn't exist, redirect to login
+  if (!userProfile) {
+    redirect("/auth/login");
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       <Sidebar user={userProfile} />

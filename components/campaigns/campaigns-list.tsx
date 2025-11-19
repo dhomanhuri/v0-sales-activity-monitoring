@@ -15,6 +15,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const router = useRouter();
+  const isPresales = userRole === "Presales";
 
   const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch =
@@ -63,16 +64,18 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
             className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
           />
         </div>
-        <Button
-          onClick={() => {
-            setEditingCampaign(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah Campaign
-        </Button>
+        {!isPresales && (
+          <Button
+            onClick={() => {
+              setEditingCampaign(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Tambah Campaign
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -120,7 +123,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {(userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && (
+                      {!isPresales && (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && (
                         <>
                           <Button
                             variant="ghost"

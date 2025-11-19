@@ -57,7 +57,7 @@ export default function LoginPage() {
                 </div>
               </div>
               <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-                Campaign Monitoring
+                Campaign Tracker
               </CardTitle>
               <CardDescription className="text-slate-600  dark:text-slate-300" style={{marginTop: '-10px'}}>
                 Sales Activity Monitoring System

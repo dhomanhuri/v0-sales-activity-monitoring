@@ -33,8 +33,11 @@ export default async function CampaignsPage() {
   } else if (userProfile.role === "GM") {
     // GM melihat sales di bawahnya
     salesQuery = salesQuery.eq("gm_id", user.id);
+  } else if (userProfile.role === "Presales") {
+    // Presales melihat semua sales (read-only)
+    // No filter needed
   }
-  // Admin melihat semua sales
+  // Admin dan Presales melihat semua sales
 
   const { data: sales } = await salesQuery.order("nama_lengkap", { ascending: true });
 
