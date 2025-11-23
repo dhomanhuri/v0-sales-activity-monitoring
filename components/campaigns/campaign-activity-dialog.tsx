@@ -17,11 +17,17 @@ export function CampaignActivityDialog({
   campaignId,
   onClose,
   onSave,
+  defaultPic,
+  defaultPotentialValue,
+  defaultCustomerId,
 }: {
   activity: any | null;
   campaignId: string;
   onClose: () => void;
   onSave: (activity: any) => void;
+  defaultPic?: string;
+  defaultPotentialValue?: number;
+  defaultCustomerId?: string;
 }) {
   const [formData, setFormData] = useState({
     customer_id: "",
@@ -30,24 +36,51 @@ export function CampaignActivityDialog({
     keterangan: "",
     potential_value: 0,
     tanggal_aktivitas: new Date().toISOString().split('T')[0],
+    presales: [] as string[],
   });
   const [customers, setCustomers] = useState<any[]>([]);
+  const [presalesList, setPresalesList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadCustomers = async () => {
+    const loadData = async () => {
       const supabase = createClient();
+      
+      // Load customers
       const { data: customersData } = await supabase
         .from("master_customers")
         .select("id, name")
         .order("name");
       setCustomers(customersData || []);
+
+      // Load presales users
+      const { data: presalesData } = await supabase
+        .from("users")
+        .select("id, nama_lengkap")
+        .eq("role", "Presales")
+        .eq("status_aktif", true)
+        .order("nama_lengkap");
+      setPresalesList(presalesData || []);
     };
 
-    loadCustomers();
+    loadData();
 
     if (activity) {
+      // Parse presales from JSONB array
+      let presalesArray: string[] = [];
+      if (activity.presales) {
+        if (Array.isArray(activity.presales)) {
+          presalesArray = activity.presales;
+        } else if (typeof activity.presales === 'string') {
+          try {
+            presalesArray = JSON.parse(activity.presales);
+          } catch {
+            presalesArray = [];
+          }
+        }
+      }
+
       setFormData({
         customer_id: activity.customer_id || "",
         jenis_aktivitas: activity.jenis_aktivitas,
@@ -55,24 +88,46 @@ export function CampaignActivityDialog({
         keterangan: activity.keterangan || "",
         potential_value: activity.potential_value || 0,
         tanggal_aktivitas: activity.tanggal_aktivitas || new Date().toISOString().split('T')[0],
+        presales: presalesArray,
+      });
+    } else if (defaultPic || defaultPotentialValue || defaultCustomerId) {
+      // Set default values when creating new activity from customer card
+      setFormData({
+        customer_id: defaultCustomerId || "",
+        jenis_aktivitas: "Initiate Call",
+        pic: defaultPic || "",
+        keterangan: "",
+        potential_value: defaultPotentialValue || 0,
+        tanggal_aktivitas: new Date().toISOString().split('T')[0],
+        presales: [],
       });
     }
-  }, [activity]);
+  }, [activity, defaultPic, defaultPotentialValue, defaultCustomerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
+    // Validate: PIC is required
+    if (!formData.pic || formData.pic.trim() === "") {
+      setError("PIC is required");
+      setIsLoading(false);
+      return;
+    }
+
     // Validate: Closing must have potential_value
     if (formData.jenis_aktivitas === "Closing" && (!formData.potential_value || formData.potential_value <= 0)) {
-      setError("Potential Value is required for Closing activity");
+      setError("Potential Revenue is required for Closing activity");
       setIsLoading(false);
       return;
     }
 
     try {
       const supabase = createClient();
+
+      // Convert presales array to JSONB format (always array, empty if none selected)
+      const presalesJsonb = formData.presales.length > 0 ? formData.presales : [];
 
       if (activity) {
         // Update existing activity
@@ -81,16 +136,17 @@ export function CampaignActivityDialog({
           .update({
             customer_id: formData.customer_id,
             jenis_aktivitas: formData.jenis_aktivitas,
-            pic: formData.pic || null,
+            pic: formData.pic,
             keterangan: formData.keterangan,
             potential_value: parseFloat(formData.potential_value.toString()),
             tanggal_aktivitas: formData.tanggal_aktivitas,
+            presales: presalesJsonb,
             updated_at: new Date().toISOString(),
           })
           .eq("id", activity.id);
 
         if (updateError) throw updateError;
-        onSave({ ...activity, ...formData });
+        onSave({ ...activity, ...formData, presales: presalesJsonb });
       } else {
         // Create new activity
         const { data: newActivity, error: insertError } = await supabase
@@ -99,10 +155,11 @@ export function CampaignActivityDialog({
             campaign_id: campaignId,
             customer_id: formData.customer_id,
             jenis_aktivitas: formData.jenis_aktivitas,
-            pic: formData.pic || null,
+            pic: formData.pic,
             keterangan: formData.keterangan,
             potential_value: parseFloat(formData.potential_value.toString()),
             tanggal_aktivitas: formData.tanggal_aktivitas,
+            presales: presalesJsonb,
           })
           .select()
           .single();
@@ -179,7 +236,7 @@ export function CampaignActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-700 dark:text-slate-300">PIC</Label>
+            <Label className="text-slate-700 dark:text-slate-300">PIC*</Label>
             <Input
               type="text"
               value={formData.pic}
@@ -188,6 +245,7 @@ export function CampaignActivityDialog({
               }
               className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-50"
               placeholder="Enter PIC name..."
+              required
             />
           </div>
 
@@ -204,8 +262,77 @@ export function CampaignActivityDialog({
           </div>
 
           <div>
+            <Label className="text-slate-700 dark:text-slate-300">Presales</Label>
+            <div className="space-y-2">
+              <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-3 bg-white dark:bg-slate-700 max-h-48 overflow-y-auto">
+                {presalesList.length > 0 ? (
+                  <div className="space-y-2">
+                    {presalesList.map((presales) => (
+                      <label
+                        key={presales.id}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-600 p-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.presales.includes(presales.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                presales: [...formData.presales, presales.id],
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                presales: formData.presales.filter((id) => id !== presales.id),
+                              });
+                            }
+                          }}
+                          className="rounded border-slate-300 dark:border-slate-600"
+                        />
+                        <span className="text-slate-900 dark:text-slate-50 text-sm">
+                          {presales.nama_lengkap}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-600 dark:text-slate-400">No presales available</p>
+                )}
+              </div>
+              {formData.presales.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.presales.map((presalesId) => {
+                    const presales = presalesList.find(p => p.id === presalesId);
+                    return presales ? (
+                      <span
+                        key={presalesId}
+                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md text-sm flex items-center gap-1"
+                      >
+                        {presales.nama_lengkap}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              presales: formData.presales.filter((id) => id !== presalesId),
+                            });
+                          }}
+                          className="ml-1 hover:text-blue-900 dark:hover:text-blue-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
             <Label className="text-slate-700 dark:text-slate-300">
-              Potential Value (Rp)
+              {formData.jenis_aktivitas === "Closing" ? "Potential Revenue (Rp)" : "Potential Value (Rp)"}
               {formData.jenis_aktivitas === "Closing" && <span className="text-red-500">*</span>}
             </Label>
             <Input

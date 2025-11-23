@@ -15,11 +15,6 @@ type SalesSummary = {
 
 export function PresalesDashboard() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const yearOptions = useMemo(() => {
-    const base = currentYear;
-    return [base - 2, base - 1, base, base + 1, base + 2];
-  }, [currentYear]);
 
   const [kpis, setKpis] = useState({
     totalSales: 0,
@@ -27,7 +22,9 @@ export function PresalesDashboard() {
     totalCampaigns: 0,
     totalMasterCustomers: 0,
     totalTargetRevenue: 0,
-    totalPotentialRevenue: 0,
+    totalPotentialLeads: 0,
+    totalAchievementRevenue: 0,
+    totalAchievementRate: 0,
   });
   const [topSales, setTopSales] = useState<SalesSummary[]>([]);
   const [search, setSearch] = useState("");
@@ -50,7 +47,9 @@ export function PresalesDashboard() {
 
       // Calculate totals from campaigns
       let totalTargetRevenue = 0;
-      let totalPotentialRevenue = 0;
+      let totalPotentialLeads = 0;
+      let totalAchievementRevenue = 0;
+      const uniqueCustomers = new Set<string>();
 
       // Get all campaigns
       const { data: allCampaigns } = await supabase
@@ -66,46 +65,24 @@ export function PresalesDashboard() {
       const allCampaignIds = (allCampaigns || []).map(c => c.id);
 
       if (allCampaignIds.length > 0) {
-        // Get all activities for potential calculation
+        // Get all activities for potential leads and achievement calculation
         const { data: allActivities } = await supabase
           .from("campaign_activities")
-          .select("campaign_id, customer_id, potential_value, tanggal_aktivitas, created_at")
+          .select("campaign_id, customer_id, jenis_aktivitas, potential_value, tanggal_aktivitas, created_at")
           .in("campaign_id", allCampaignIds);
 
-        // Calculate potential revenue (akumulasi potential value terakhir tiap customer per campaign)
-        // Group activities by campaign_id first
-        const activitiesByCampaign = new Map<string, any[]>();
+        // Calculate total potential leads (unique customers from all activities)
         for (const act of allActivities || []) {
-          const campId = act.campaign_id;
-          if (!activitiesByCampaign.has(campId)) {
-            activitiesByCampaign.set(campId, []);
+          if (act.customer_id) {
+            uniqueCustomers.add(act.customer_id);
           }
-          activitiesByCampaign.get(campId)!.push(act);
         }
-        
-        // For each campaign, calculate potential revenue from latest activity per customer
-        for (const [campaignId, activities] of activitiesByCampaign.entries()) {
-          if (activities.length > 0) {
-            // Sort by tanggal_aktivitas descending
-            const sortedActivities = [...activities].sort((a, b) => {
-              const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
-              const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
-              return dateB - dateA;
-            });
-            
-            // Group by customer_id, keep only latest activity per customer
-            const customerLatestActivity = new Map<string, any>();
-            for (const activity of sortedActivities) {
-              const customerId = activity.customer_id;
-              if (customerId && !customerLatestActivity.has(customerId)) {
-                customerLatestActivity.set(customerId, activity);
-              }
-            }
-            
-            // Sum potential_value from latest activities per customer
-            for (const activity of customerLatestActivity.values()) {
-              totalPotentialRevenue += Number(activity.potential_value) || 0;
-            }
+        totalPotentialLeads = uniqueCustomers.size;
+
+        // Calculate achievement revenue
+        for (const act of allActivities || []) {
+          if (act.jenis_aktivitas === "Closing") {
+            totalAchievementRevenue += Number(act.potential_value) || 0;
           }
         }
       }
@@ -194,18 +171,25 @@ export function PresalesDashboard() {
       salesSummaries.sort((a, b) => b.potentialRevenue - a.potentialRevenue);
       setTopSales(salesSummaries.slice(0, 8));
 
+      // Calculate achievement rate
+      const totalAchievementRate = totalTargetRevenue > 0 
+        ? (totalAchievementRevenue / totalTargetRevenue) * 100 
+        : 0;
+
       setKpis({
         totalSales,
         totalGm,
         totalCampaigns,
         totalMasterCustomers,
         totalTargetRevenue,
-        totalPotentialRevenue,
+        totalPotentialLeads,
+        totalAchievementRevenue,
+        totalAchievementRate: Math.round(totalAchievementRate * 100) / 100,
       });
     };
 
     loadData();
-  }, [selectedYear, currentYear]);
+  }, [currentYear]);
 
   const filteredTopSales = topSales.filter((s) =>
     s.salesName.toLowerCase().includes(search.toLowerCase())
@@ -215,48 +199,42 @@ export function PresalesDashboard() {
     <div className="space-y-6">
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">System Overview (Read-Only)</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 dark:text-slate-400 text-sm">Year</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
-              >
-                {yearOptions.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Overall sales system summary (Read-Only Access)</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">System Overview (Read-Only)</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Overall AM system summary (Read-Only Access)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Sales</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total AM</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalSales}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total GM</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Department</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalGm}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Campaigns</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Campaign</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalCampaigns}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Master Customers</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Customer</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalMasterCustomers}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Target Revenue</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Target Revenue</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">Rp {kpis.totalTargetRevenue.toLocaleString('id-ID')}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Potential Leads Revenue</div>
-              <div className="text-blue-600 dark:text-blue-400 text-2xl font-semibold">Rp {kpis.totalPotentialRevenue.toLocaleString('id-ID')}</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Potential Leads</div>
+              <div className="text-blue-600 dark:text-blue-400 text-2xl font-semibold">{kpis.totalPotentialLeads}</div>
+            </div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Achievement Revenue</div>
+              <div className="text-green-600 dark:text-green-400 text-2xl font-semibold">Rp {kpis.totalAchievementRevenue.toLocaleString('id-ID')}</div>
+            </div>
+            <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Achievement Rate</div>
+              <div className="text-purple-600 dark:text-purple-400 text-2xl font-semibold">{kpis.totalAchievementRate.toFixed(1)}%</div>
             </div>
           </div>
         </CardContent>
@@ -265,11 +243,11 @@ export function PresalesDashboard() {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Top Sales by Potential</CardTitle>
+            <CardTitle className="text-slate-900 dark:text-slate-50">Top AM by Potential</CardTitle>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search sales..."
+                placeholder="Search AM..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"

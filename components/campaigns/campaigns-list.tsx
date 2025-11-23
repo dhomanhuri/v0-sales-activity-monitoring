@@ -108,7 +108,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                         {(campaign.master_customers as any)?.name} - {(campaign.master_campaigns as any)?.name}
                       </h3>
                       <div className="flex gap-4 text-sm text-slate-600 dark:text-slate-400">
-                        <span>Sales: {(campaign.users as any)?.nama_lengkap}</span>
+                        <span>AM: {(campaign.users as any)?.nama_lengkap}</span>
                         {campaign.target_revenue && (
                           <span>Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}</span>
                         )}

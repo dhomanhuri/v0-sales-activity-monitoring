@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserDialog } from "./user-dialog";
 import { Plus, Search, Trash2 } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
@@ -24,12 +25,20 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
     return matchesSearch && matchesRole;
   });
 
-  const handleUserSaved = (updatedUser: any) => {
+  const handleUserSaved = async (updatedUser: any) => {
+    // Refresh user data to get latest avatar_url
+    const supabase = createClient();
+    const { data: freshUser } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", updatedUser.id)
+      .single();
+
     if (editingUser) {
-      setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+      setUsers(users.map(u => u.id === updatedUser.id ? (freshUser || updatedUser) : u));
       setEditingUser(null);
     } else {
-      setUsers([updatedUser, ...users]);
+      setUsers([freshUser || updatedUser, ...users]);
     }
     setShowDialog(false);
   };
@@ -106,9 +115,11 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-700">
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Photo</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Name</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Email</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Role</th>
+                    <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Department</th>
                     <th className="text-left py-3 px-4 text-slate-700 dark:text-slate-300">Status</th>
                     <th className="text-right py-3 px-4 text-slate-700 dark:text-slate-300">Actions</th>
                   </tr>
@@ -119,6 +130,21 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                       key={user.id}
                       className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                     >
+                      <td className="py-3 px-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={user.avatar_url} alt={user.nama_lengkap} />
+                          <AvatarFallback>
+                            {user.nama_lengkap
+                              ? user.nama_lengkap
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .slice(0, 2)
+                              : "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </td>
                       <td className="py-3 px-4 text-slate-900 dark:text-slate-50">{user.nama_lengkap}</td>
                       <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{user.email}</td>
                       <td className="py-3 px-4">
@@ -135,6 +161,9 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                         >
                           {user.role}
                         </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+                        {user.role === "GM" ? (user.department || "-") : "-"}
                       </td>
                       <td className="py-3 px-4">
                         <Badge

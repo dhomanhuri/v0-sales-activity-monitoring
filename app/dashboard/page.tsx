@@ -34,8 +34,8 @@ export default async function DashboardPage() {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">Dashboard</h1>
             <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm md:text-base">
-              {userProfile.role === 'Sales' && 'Summary of your sales activities'}
-              {userProfile.role === 'GM' && 'Your sales team performance'}
+              {userProfile.role === 'Sales' && 'Summary of your AM activities'}
+              {userProfile.role === 'GM' && 'Your AM team performance'}
               {userProfile.role === 'Admin' && 'Overall system summary'}
               {userProfile.role === 'Presales' && 'System overview (Read-Only)'}
         </p>

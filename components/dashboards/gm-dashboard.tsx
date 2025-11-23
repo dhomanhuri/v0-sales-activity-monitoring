@@ -25,11 +25,6 @@ export function GMDashboard({ userId }: { userId: string }) {
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-  const yearOptions = useMemo(() => {
-    const base = currentYear;
-    return [base - 2, base - 1, base, base + 1, base + 2];
-  }, [currentYear]);
   const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(Array.from({ length: 12 }, () => 0));
 
   useEffect(() => {
@@ -144,7 +139,7 @@ export function GMDashboard({ userId }: { userId: string }) {
         }
       }
 
-      // Build monthly revenue from Closing activities in selectedYear
+      // Build monthly revenue from Closing activities in currentYear
       if ((teamUsers || []).length > 0) {
         const teamIds = (teamUsers || []).map(u => u.id);
         const { data: campaigns } = await supabase
@@ -154,8 +149,8 @@ export function GMDashboard({ userId }: { userId: string }) {
         
         const campaignIds = (campaigns || []).map(c => c.id);
         if (campaignIds.length > 0) {
-          const startDate = `${selectedYear}-01-01`;
-          const endDate = `${selectedYear}-12-31`;
+          const startDate = `${currentYear}-01-01`;
+          const endDate = `${currentYear}-12-31`;
           const { data: closings } = await supabase
             .from("campaign_activities")
             .select("tanggal_aktivitas, potential_value")
@@ -180,7 +175,7 @@ export function GMDashboard({ userId }: { userId: string }) {
     };
 
     loadData();
-  }, [userId, selectedYear, currentYear]);
+  }, [userId, currentYear]);
 
   const filteredSummaries = summaries.filter((s) =>
     s.salesName.toLowerCase().includes(search.toLowerCase())
@@ -190,30 +185,16 @@ export function GMDashboard({ userId }: { userId: string }) {
     <div className="space-y-6">
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Team Performance ({team.length} Sales)</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 dark:text-slate-400 text-sm">Year</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
-              >
-                {yearOptions.map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Team Performance ({team.length} AM)</CardTitle>
           <CardDescription className="text-slate-600 dark:text-slate-400">
-            Monitor your sales team performance
+            Monitor your AM team performance
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-600 dark:text-slate-400" />
             <Input
-              placeholder="Cari sales..."
+              placeholder="Cari AM..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
@@ -264,7 +245,7 @@ export function GMDashboard({ userId }: { userId: string }) {
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
           <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {selectedYear}</CardDescription>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {currentYear}</CardDescription>
         </CardHeader>
         <CardContent>
           {monthlyRevenue.every(v => v === 0) ? (
