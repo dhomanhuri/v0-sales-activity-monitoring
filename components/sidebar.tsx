@@ -11,7 +11,6 @@ import { ThemeToggle } from './theme-toggle';
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "AM", href: "/dashboard/campaigns", icon: Megaphone },
-  { label: "Target", href: "/dashboard/targets", icon: Target },
   { label: "Profile Settings", href: "/dashboard/profile", icon: Settings },
 ];
 
@@ -41,7 +40,7 @@ export function Sidebar({ user }: { user: any }) {
           </div>
           <div>
             <h1 className="font-bold text-lg text-slate-900 dark:text-slate-50 tracking-tight">Campaign Tracker</h1>
-            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">{user?.role}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">{user?.role=="Sales" ? "AM" : user?.role}</p>
           </div>
         </div>
       </div>

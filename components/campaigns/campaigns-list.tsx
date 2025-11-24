@@ -15,7 +15,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<any>(null);
   const router = useRouter();
-  const isPresales = userRole === "Presales";
+  const isPresales = userRole === "Presales" || userRole === "Engineer";
 
   const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch =

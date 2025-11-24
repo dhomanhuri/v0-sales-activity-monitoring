@@ -4,6 +4,7 @@ import { SalesDashboard } from "@/components/dashboards/sales-dashboard";
 import { GMDashboard } from "@/components/dashboards/gm-dashboard";
 import { AdminDashboard } from "@/components/dashboards/admin-dashboard";
 import { PresalesDashboard } from "@/components/dashboards/presales-dashboard";
+import { EngineerDashboard } from "@/components/dashboards/engineer-dashboard";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
               {userProfile.role === 'GM' && 'Your AM team performance'}
               {userProfile.role === 'Admin' && 'Overall system summary'}
               {userProfile.role === 'Presales' && 'System overview (Read-Only)'}
+              {userProfile.role === 'Engineer' && 'System overview (Read-Only)'}
         </p>
           </div>
         </div>
@@ -48,6 +50,7 @@ export default async function DashboardPage() {
       {userProfile.role === 'GM' && <GMDashboard userId={user.id} />}
       {userProfile.role === 'Admin' && <AdminDashboard />}
       {userProfile.role === 'Presales' && <PresalesDashboard />}
+      {userProfile.role === 'Engineer' && <EngineerDashboard />}
       </div>
     </div>
   );

@@ -82,6 +82,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
           <option value="GM">General Manager</option>
           <option value="Sales">Sales</option>
           <option value="Presales">Presales</option>
+          <option value="Engineer">Engineer</option>
         </select>
         <Button
           onClick={() => {
@@ -156,10 +157,12 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                               ? "bg-blue-900 text-blue-200"
                               : user.role === "Presales"
                               ? "bg-purple-900 text-purple-200"
+                              : user.role === "Engineer"
+                              ? "bg-purple-900 text-purple-200"
                               : "bg-green-900 text-green-200"
                           }
                         >
-                          {user.role}
+                          {user?.role=="Sales" ? "AM" : user?.role}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-600 dark:text-slate-400">

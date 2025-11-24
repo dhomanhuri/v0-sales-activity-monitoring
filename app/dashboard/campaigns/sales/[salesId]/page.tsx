@@ -48,7 +48,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ sa
       redirect("/dashboard/campaigns");
     }
   }
-  // Presales and Admin can access all sales (read-only)
+  // Presales, Engineer and Admin can access all sales (read-only)
 
   // Get campaigns for this sales with master campaign info
   const { data: campaigns } = await supabase

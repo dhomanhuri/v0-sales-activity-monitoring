@@ -8,7 +8,7 @@ import { Search } from 'lucide-react';
 export function TargetsList({ initialTargets, userRole, userId }: any) {
   const [targets] = useState(initialTargets);
   const [search, setSearch] = useState("");
-  const isPresales = userRole === "Presales";
+  const isPresales = userRole === "Presales" || userRole === "Engineer";
 
   const filteredTargets = targets.filter((target: any) => {
     const matchesSearch =

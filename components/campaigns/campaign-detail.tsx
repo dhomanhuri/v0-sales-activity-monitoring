@@ -27,8 +27,8 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("date-desc");
 
-  const canEdit = (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && userRole !== "Presales";
-  const isPresales = userRole === "Presales";
+  const canEdit = (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && userRole !== "Presales" && userRole !== "Engineer";
+  const isPresales = userRole === "Presales" || userRole === "Engineer";
 
   // Load presales users for mapping IDs to names
   useEffect(() => {
