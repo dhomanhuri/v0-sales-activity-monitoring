@@ -54,11 +54,11 @@ export function CampaignActivityDialog({
         .order("name");
       setCustomers(customersData || []);
 
-      // Load presales users
+      // Load presales and engineer users
       const { data: presalesData } = await supabase
         .from("users")
-        .select("id, nama_lengkap")
-        .eq("role", "Presales")
+        .select("id, nama_lengkap, role")
+        .in("role", ["Presales", "Engineer"])
         .eq("status_aktif", true)
         .order("nama_lengkap");
       setPresalesList(presalesData || []);
@@ -262,7 +262,7 @@ export function CampaignActivityDialog({
           </div>
 
           <div>
-            <Label className="text-slate-700 dark:text-slate-300">Presales</Label>
+            <Label className="text-slate-700 dark:text-slate-300">Presales / Engineer</Label>
             <div className="space-y-2">
               <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-3 bg-white dark:bg-slate-700 max-h-48 overflow-y-auto">
                 {presalesList.length > 0 ? (
@@ -291,13 +291,13 @@ export function CampaignActivityDialog({
                           className="rounded border-slate-300 dark:border-slate-600"
                         />
                         <span className="text-slate-900 dark:text-slate-50 text-sm">
-                          {presales.nama_lengkap}
+                          {presales.nama_lengkap} {presales.role && `(${presales.role})`}
                         </span>
                       </label>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-600 dark:text-slate-400">No presales available</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">No presales or engineer available</p>
                 )}
               </div>
               {formData.presales.length > 0 && (
