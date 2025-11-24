@@ -287,11 +287,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
               {(campaign.master_campaigns as any)?.description}
             </p>
           )}
-          {campaign.target_revenue && (
-            <p className="text-slate-500 dark:text-slate-500 mt-2 text-sm font-medium">
-              Target: Rp {campaign.target_revenue.toLocaleString('id-ID')}
-            </p>
-          )}
+          
         </div>
       </div>
 
