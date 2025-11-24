@@ -28,7 +28,6 @@ export function AdminDashboard() {
     totalAchievementRate: 0,
   });
   const [topSales, setTopSales] = useState<SalesSummary[]>([]);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(Array.from({ length: 12 }, () => 0));
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -51,7 +50,6 @@ export function AdminDashboard() {
       let totalTargetRevenue = 0;
       let totalPotentialLeads = 0;
       let totalAchievementRevenue = 0;
-      const monthly = Array.from({ length: 12 }, () => 0);
       const uniqueCustomers = new Set<string>();
 
       // Get all campaigns
@@ -82,22 +80,14 @@ export function AdminDashboard() {
         }
         totalPotentialLeads = uniqueCustomers.size;
 
-        // Calculate achievement revenue and monthly revenue
+        // Calculate achievement revenue
         for (const act of allActivities || []) {
           if (act.jenis_aktivitas === "Closing") {
             const value = Number(act.potential_value) || 0;
             totalAchievementRevenue += value;
-            
-            // Monthly revenue for current year
-            const d = new Date(act.tanggal_aktivitas);
-            if (d.getFullYear() === currentYear) {
-              monthly[d.getMonth()] += value;
-            }
           }
         }
       }
-
-      setMonthlyRevenue(monthly);
 
       // Build sales summaries
       const salesSummaries: SalesSummary[] = [];
@@ -261,35 +251,6 @@ export function AdminDashboard() {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {currentYear}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-600 dark:text-slate-400">No revenue for this year yet.</p>
-          ) : (
-            <div className="grid grid-cols-12 gap-2 items-end h-40">
-              {monthlyRevenue.map((value, idx) => {
-                const max = Math.max(...monthlyRevenue);
-                const heightPct = max > 0 ? Math.max((value / max) * 100, 4) : 4;
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-full bg-indigo-500 rounded-t"
-                      style={{ height: `${heightPct}%` }}
-                      title={`Rp ${value.toLocaleString('id-ID')}`}
-                    />
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400">{idx + 1}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <CardTitle className="text-slate-900 dark:text-slate-50">Top AM by Achievement</CardTitle>
             <div className="relative">
@@ -315,7 +276,7 @@ export function AdminDashboard() {
                   <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
-                      <span className="text-slate-600 dark:text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                      <span className="text-slate-600 dark:text-slate-400 text-sm">Achievement: {percent.toFixed(0)}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
                       <div>
@@ -323,7 +284,7 @@ export function AdminDashboard() {
                         <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-600 dark:text-slate-400">Potential</div>
+                        <div className="text-slate-600 dark:text-slate-400">Potential Leads</div>
                         <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>

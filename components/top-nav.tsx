@@ -1,17 +1,32 @@
 "use client";
 
+import Image from "next/image";
 import { User } from 'lucide-react';
 import Link from "next/link";
 
 export function TopNav({ user }: { user: any }) {
+  const avatarUrl = user?.avatar_url;
+
   return (
     <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 px-6 py-4 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md">
-          <span className="text-white font-bold text-sm">
-            {user?.nama_lengkap?.charAt(0)?.toUpperCase() || 'U'}
-          </span>
-        </div>
+        {avatarUrl ? (
+          <div className="h-10 w-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-600 shadow-md">
+            <Image
+              src={avatarUrl}
+              alt={user?.nama_lengkap || "User avatar"}
+              width={40}
+              height={40}
+              className="object-cover h-full w-full"
+            />
+          </div>
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md">
+            <span className="text-white font-bold text-sm">
+              {user?.nama_lengkap?.charAt(0)?.toUpperCase() || 'U'}
+            </span>
+          </div>
+        )}
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Welcome back,</p>
           <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{user?.nama_lengkap}</p>

@@ -22,10 +22,8 @@ type TeamSummary = {
 export function GMDashboard({ userId }: { userId: string }) {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [summaries, setSummaries] = useState<TeamSummary[]>([]);
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>(Array.from({ length: 12 }, () => 0));
 
   useEffect(() => {
     const loadData = async () => {
@@ -41,6 +39,7 @@ export function GMDashboard({ userId }: { userId: string }) {
 
       // For each sales, calculate from campaigns
       const teamSummaries: TeamSummary[] = [];
+      const campaignIdsSet = new Set<string>();
       for (const member of teamUsers || []) {
         // Get all campaigns for this sales
         const { data: campaigns } = await supabase
@@ -80,6 +79,13 @@ export function GMDashboard({ userId }: { userId: string }) {
           }
         }
 
+        // Track campaign IDs for later usage (recent activities lookup)
+        for (const campaign of campaigns || []) {
+          if (campaign?.id) {
+            campaignIdsSet.add(campaign.id);
+          }
+        }
+
         // Calculate Achievement Revenue (sum of all Closing activities)
         let achievementRevenue = 0;
         for (const campaign of campaigns || []) {
@@ -106,72 +112,8 @@ export function GMDashboard({ userId }: { userId: string }) {
       setSummaries(teamSummaries);
 
       // Load recent activities from campaign_activities (last 10)
-      const teamIds = (teamUsers || []).map(u => u.id);
-      if (teamIds.length > 0) {
-        // First get campaigns for team
-        const { data: teamCampaigns } = await supabase
-          .from("campaigns")
-          .select("id")
-          .in("sales_id", teamIds);
-        
-        const campaignIds = (teamCampaigns || []).map(c => c.id);
-        
-        if (campaignIds.length > 0) {
-          const { data: recent } = await supabase
-            .from("campaign_activities")
-            .select(`
-              id,
-              jenis_aktivitas,
-              keterangan,
-              tanggal_aktivitas,
-              potential_value,
-              campaign_id,
-              campaigns:campaign_id(
-                master_customers:customer_id(name),
-                master_campaigns:campaign_id(name),
-                users:sales_id(nama_lengkap)
-              )
-            `)
-            .in("campaign_id", campaignIds)
-            .order("tanggal_aktivitas", { ascending: false })
-            .limit(10);
-          setRecentActivities(recent || []);
-        }
-      }
+      // Latest activities removed
 
-      // Build monthly revenue from Closing activities in currentYear
-      if ((teamUsers || []).length > 0) {
-        const teamIds = (teamUsers || []).map(u => u.id);
-        const { data: campaigns } = await supabase
-          .from("campaigns")
-          .select("id")
-          .in("sales_id", teamIds);
-        
-        const campaignIds = (campaigns || []).map(c => c.id);
-        if (campaignIds.length > 0) {
-          const startDate = `${currentYear}-01-01`;
-          const endDate = `${currentYear}-12-31`;
-          const { data: closings } = await supabase
-            .from("campaign_activities")
-            .select("tanggal_aktivitas, potential_value")
-            .in("campaign_id", campaignIds)
-            .eq("jenis_aktivitas", "Closing")
-            .gte("tanggal_aktivitas", startDate)
-            .lte("tanggal_aktivitas", endDate);
-          
-          const monthly = Array.from({ length: 12 }, () => 0);
-          for (const row of closings || []) {
-            const d = new Date(row.tanggal_aktivitas);
-            const m = d.getMonth();
-            monthly[m] += Number(row.potential_value) || 0;
-          }
-          setMonthlyRevenue(monthly);
-        } else {
-          setMonthlyRevenue(Array.from({ length: 12 }, () => 0));
-        }
-      } else {
-        setMonthlyRevenue(Array.from({ length: 12 }, () => 0));
-      }
     };
 
     loadData();
@@ -211,7 +153,7 @@ export function GMDashboard({ userId }: { userId: string }) {
                   <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
-                      <span className="text-slate-600 dark:text-slate-400 text-sm">{percent.toFixed(0)}%</span>
+                      <span className="text-slate-600 dark:text-slate-400 text-sm">Achievement: {percent.toFixed(0)}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
                       <div>
@@ -219,7 +161,7 @@ export function GMDashboard({ userId }: { userId: string }) {
                         <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
-                        <div className="text-slate-600 dark:text-slate-400">Potential</div>
+                        <div className="text-slate-600 dark:text-slate-400">Potential Leads</div>
                         <div className="text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
@@ -242,68 +184,6 @@ export function GMDashboard({ userId }: { userId: string }) {
         </CardContent>
       </Card>
 
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Monthly Revenue (Closing)</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Monthly revenue distribution in {currentYear}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {monthlyRevenue.every(v => v === 0) ? (
-            <p className="text-slate-600 dark:text-slate-400">No revenue for this year yet.</p>
-          ) : (
-            <div className="grid grid-cols-12 gap-2 items-end h-40">
-              {monthlyRevenue.map((value, idx) => {
-                const max = Math.max(...monthlyRevenue);
-                const heightPct = max > 0 ? Math.max((value / max) * 100, 4) : 4;
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-full bg-emerald-500 rounded-t"
-                      style={{ height: `${heightPct}%` }}
-                      title={`Rp ${value.toLocaleString('id-ID')}`}
-                    />
-                    <div className="text-[10px] text-slate-600 dark:text-slate-400">{idx + 1}</div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-slate-900 dark:text-slate-50">Latest Team Activities</CardTitle>
-          <CardDescription className="text-slate-600 dark:text-slate-400">10 latest activities from your team</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {recentActivities.length === 0 ? (
-            <p className="text-slate-600 dark:text-slate-400">No activities yet.</p>
-          ) : (
-            recentActivities.map((a) => {
-              const campaign = (a.campaigns as any);
-              return (
-                <div key={a.id} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-slate-900 dark:text-slate-50 text-sm">
-                        {a.jenis_aktivitas} • {campaign?.master_customers?.name} - {campaign?.master_campaigns?.name}
-                      </div>
-                      <div className="text-slate-600 dark:text-slate-400 text-xs">
-                        {new Date(a.tanggal_aktivitas).toLocaleDateString('id-ID')}
-                      </div>
-                    </div>
-                    <div className="text-slate-600 dark:text-slate-400 text-xs">
-                      {campaign?.users?.nama_lengkap}
-                      {a.potential_value && ` • Rp ${Number(a.potential_value).toLocaleString('id-ID')}`}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
