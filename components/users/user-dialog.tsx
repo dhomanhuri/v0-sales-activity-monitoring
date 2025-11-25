@@ -65,7 +65,7 @@ export function UserDialog({
       const { data } = await supabase
         .from("users")
         .select("id, nama_lengkap")
-        .eq("role", "GM");
+        .in("role", ["GM", "GM Non Sales"]);
       setManagers(data || []);
     };
 
@@ -198,7 +198,7 @@ export function UserDialog({
             nama_lengkap: formData.nama_lengkap,
             role: formData.role,
             gm_id: formData.role === "Sales" ? (formData.gm_id || null) : null,
-            department: formData.role === "GM" ? (formData.department || null) : null,
+            department: (formData.role === "GM" || formData.role === "GM Non Sales") ? (formData.department || null) : null,
             avatar_url: formData.avatar_url || null,
             status_aktif: formData.status_aktif,
             updated_at: new Date().toISOString(),
@@ -258,7 +258,7 @@ export function UserDialog({
               nama_lengkap: formData.nama_lengkap,
               role: formData.role,
               gm_id: formData.role === "Sales" ? (formData.gm_id || null) : null,
-              department: formData.role === "GM" ? (formData.department || null) : null,
+              department: (formData.role === "GM" || formData.role === "GM Non Sales") ? (formData.department || null) : null,
               avatar_url: avatarUrl || null,
               status_aktif: formData.status_aktif,
               updated_at: new Date().toISOString(),
@@ -388,6 +388,7 @@ export function UserDialog({
             >
               <option value="Sales">Sales</option>
               <option value="GM">General Manager</option>
+              <option value="GM Non Sales">GM Non Sales</option>
               <option value="Admin">Admin</option>
               <option value="Presales">Presales</option>
               <option value="Engineer">Engineer</option>
@@ -414,7 +415,7 @@ export function UserDialog({
             </div>
           )}
 
-          {formData.role === "GM" && (
+          {(formData.role === "GM" || formData.role === "GM Non Sales") && (
             <div>
               <Label className="text-slate-700 dark:text-slate-300">Department</Label>
               <Input

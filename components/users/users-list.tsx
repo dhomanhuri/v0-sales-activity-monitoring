@@ -153,7 +153,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                           className={
                             user.role === "Admin"
                               ? "bg-red-900 text-red-200"
-                              : user.role === "GM"
+                              : user.role === "GM" || user.role === "GM Non Sales"
                               ? "bg-blue-900 text-blue-200"
                               : user.role === "Presales"
                               ? "bg-purple-900 text-purple-200"
@@ -166,7 +166,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
-                        {user.role === "GM" ? (user.department || "-") : "-"}
+                        {(user.role === "GM" || user.role === "GM Non Sales") ? (user.department || "-") : "-"}
                       </td>
                       <td className="py-3 px-4">
                         <Badge

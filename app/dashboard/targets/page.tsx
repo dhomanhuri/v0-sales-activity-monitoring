@@ -27,7 +27,7 @@ export default async function TargetsPage() {
     .select("id, nama_lengkap")
     .eq("role", "Sales");
 
-  if (userProfile.role === "GM") {
+  if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
     salesQuery = salesQuery.eq("gm_id", user.id);
   } else if (userProfile.role === "Sales") {
     salesQuery = salesQuery.eq("id", user.id);

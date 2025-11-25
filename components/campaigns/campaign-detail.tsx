@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Filter, X, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Filter, X, ArrowUpDown, Globe, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CampaignActivityDialog } from "./campaign-activity-dialog";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +27,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("date-desc");
 
-  const canEdit = (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && userRole !== "Presales" && userRole !== "Engineer";
+  const canEdit = (userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales" || campaign.sales_id === userId) && userRole !== "Presales" && userRole !== "Engineer";
   const isPresales = userRole === "Presales" || userRole === "Engineer";
 
   // Load presales users for mapping IDs to names
@@ -225,7 +225,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     }
   };
 
-  // Potential Revenue adalah akumulasi potential value terakhir tiap customer
+  // Potential Revenue adalah akumulasi Potential Leads terakhir tiap customer
   // Group activities by customer_id, ambil yang terakhir per customer, lalu jumlahkan
   const potentialRevenue = (() => {
     const customerLatestActivity = new Map<string, any>();
@@ -360,11 +360,12 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
               <Button
                 onClick={() => {
                   setEditingActivity(null);
+                  setDefaultValues({});
                   setShowDialog(true);
                 }}
-                className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
               >
-                <Plus className="h-4 w-4" />
+                <Globe className="h-4 w-4" />
                 Add Activity
               </Button>
             )}
@@ -404,8 +405,8 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                 <option value="customer-desc">Sort: Customer (Z-A)</option>
                 <option value="type-asc">Sort: Activity Type (A-Z)</option>
                 <option value="type-desc">Sort: Activity Type (Z-A)</option>
-                <option value="value-desc">Sort: Potential Value (High-Low)</option>
-                <option value="value-asc">Sort: Potential Value (Low-High)</option>
+                <option value="value-desc">Sort: Potential Leads (High-Low)</option>
+                <option value="value-asc">Sort: Potential Leads (Low-High)</option>
               </select>
             </div>
             {showFilters && (
@@ -488,7 +489,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                 const isExpanded = expandedCustomers.has(group.customerId);
                 const activityCount = group.activities.length;
                 
-                // Get potential value from the latest activity for this customer
+                // Get Potential Leads from the latest activity for this customer
                 // Activities are already sorted by tanggal_aktivitas descending in groupedActivities
                 const latestActivity = group.activities.length > 0 ? group.activities[0] : null;
                 const potentialValue = latestActivity ? (parseFloat(latestActivity.potential_value) || 0) : 0;
@@ -553,7 +554,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                             }}
                             className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Users className="h-4 w-4" />
                             Add Activity
                           </Button>
                         )}

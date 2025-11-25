@@ -123,7 +123,7 @@ export function CampaignsList({ initialCampaigns, userRole, userId }: any) {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {!isPresales && (userRole === "Admin" || userRole === "GM" || campaign.sales_id === userId) && (
+                      {!isPresales && (userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales" || campaign.sales_id === userId) && (
                         <>
                           <Button
                             variant="ghost"

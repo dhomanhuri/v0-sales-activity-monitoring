@@ -46,7 +46,7 @@ export function ActivityDialog({
       const supabase = createClient();
 
       // If GM/Admin: load selectable sales list. If Sales: set selected to self.
-      if (userRole === "GM") {
+      if (userRole === "GM" || userRole === "GM Non Sales") {
         const { data: gmSales } = await supabase
           .from("users")
           .select("id, nama_lengkap")
@@ -170,7 +170,7 @@ export function ActivityDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {(userRole === "GM" || userRole === "Admin") && (
+          {(userRole === "GM" || userRole === "GM Non Sales" || userRole === "Admin") && (
             <div>
               <Label className="text-slate-300">Sales*</Label>
               <select

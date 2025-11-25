@@ -16,26 +16,63 @@ export function MasterCustomerDialog({
   customer,
   onClose,
   onSave,
+  userRole,
+  userId,
 }: {
   customer: any | null;
   onClose: () => void;
   onSave: (customer: any) => void;
+  userRole?: string;
+  userId?: string;
 }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    sales_id: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [salesList, setSalesList] = useState<any[]>([]);
 
   useEffect(() => {
+    const loadSalesList = async () => {
+      const supabase = createClient();
+      let query = supabase
+        .from("users")
+        .select("id, nama_lengkap")
+        .eq("role", "Sales")
+        .eq("status_aktif", true);
+
+      // If user is GM, only show their team
+      if (userRole === "GM" || userRole === "GM Non Sales") {
+        query = query.eq("gm_id", userId);
+      } else if (userRole === "Sales") {
+        // Sales can only assign to themselves
+        query = query.eq("id", userId);
+      }
+      // Admin can see all sales
+
+      const { data } = await query.order("nama_lengkap", { ascending: true });
+      setSalesList(data || []);
+    };
+
+    loadSalesList();
+
     if (customer) {
       setFormData({
         name: customer.name,
         description: customer.description || "",
+        sales_id: customer.sales_id || "",
+      });
+    } else if (userRole === "Sales" && userId) {
+      // Pre-fill sales_id for Sales users
+      setFormData({
+        name: "",
+        description: "",
+        sales_id: userId,
       });
     }
-  }, [customer]);
+  }, [customer, userRole, userId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +87,9 @@ export function MasterCustomerDialog({
         const { data: updatedCustomer, error: updateError } = await supabase
           .from("master_customers")
           .update({
-            ...formData,
+            name: formData.name,
+            description: formData.description,
+            sales_id: formData.sales_id || null,
             updated_at: new Date().toISOString(),
           })
           .eq("id", customer.id)
@@ -66,7 +105,11 @@ export function MasterCustomerDialog({
         // Create new customer
         const { data: newCustomer, error: insertError } = await supabase
           .from("master_customers")
-          .insert(formData)
+          .insert({
+            name: formData.name,
+            description: formData.description,
+            sales_id: formData.sales_id || null,
+          })
           .select()
           .single();
 
@@ -114,6 +157,27 @@ export function MasterCustomerDialog({
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50 min-h-24"
             />
           </div>
+
+          {(userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales") && (
+            <div>
+              <Label className="text-slate-700 dark:text-slate-300">Sales (AM)</Label>
+              <select
+                value={formData.sales_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, sales_id: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
+                required
+              >
+                <option value="">Select Sales</option>
+                {salesList.map((sales) => (
+                  <option key={sales.id} value={sales.id}>
+                    {sales.nama_lengkap}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 

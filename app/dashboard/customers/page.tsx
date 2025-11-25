@@ -22,7 +22,7 @@ export default async function CustomersPage() {
 
   if (userProfile?.role === "Sales") {
     query = query.eq("sales_id", user.id);
-  } else if (userProfile?.role === "GM") {
+  } else if (userProfile?.role === "GM" || userProfile?.role === "GM Non Sales") {
     // Get sales under this GM
     const { data: subordinates } = await supabase
       .from("users")

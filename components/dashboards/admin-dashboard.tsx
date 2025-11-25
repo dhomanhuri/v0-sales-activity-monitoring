@@ -2,15 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
-type SalesSummary = {
-  salesId: string;
-  salesName: string;
+type DepartmentSummary = {
+  department: string;
   targetRevenue: number;
   potentialRevenue: number;
   achievementRevenue: number;
+  salesCount: number;
   campaignCount: number;
 };
 
@@ -27,23 +25,22 @@ export function AdminDashboard() {
     totalAchievementRevenue: 0,
     totalAchievementRate: 0,
   });
-  const [topSales, setTopSales] = useState<SalesSummary[]>([]);
-  const [search, setSearch] = useState("");
+  const [departments, setDepartments] = useState<DepartmentSummary[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = (await import("@/lib/supabase/client")).createClient();
 
       // Basic counts
-      const [{ data: salesUsers }, { data: gmUsers }, { data: campaigns }, { data: masterCustomers }] = await Promise.all([
+      const [{ data: salesUsers }, { data: gmUsers }, { data: masterCampaigns }, { data: masterCustomers }] = await Promise.all([
         supabase.from("users").select("id, nama_lengkap").eq("role", "Sales"),
         supabase.from("users").select("id").eq("role", "GM"),
-        supabase.from("campaigns").select("id"),
+        supabase.from("master_campaigns").select("id"),
         supabase.from("master_customers").select("id"),
       ]);
       const totalSales = salesUsers?.length || 0;
       const totalGm = gmUsers?.length || 0;
-      const totalCampaigns = campaigns?.length || 0;
+      const totalCampaigns = masterCampaigns?.length || 0;
       const totalMasterCustomers = masterCustomers?.length || 0;
 
       // Calculate totals from campaigns
@@ -89,13 +86,20 @@ export function AdminDashboard() {
         }
       }
 
-      // Build sales summaries
-      const salesSummaries: SalesSummary[] = [];
-      
-      // Get all campaigns with sales info
+      // Build department summaries
+      // Get all campaigns with sales info and GM department
       const { data: allCampaignsWithSales } = await supabase
         .from("campaigns")
-        .select("id, target_revenue, sales_id, users:sales_id(nama_lengkap)");
+        .select(`
+          id, 
+          target_revenue, 
+          sales_id, 
+          users:sales_id(
+            nama_lengkap,
+            gm_id,
+            gm:gm_id(department)
+          )
+        `);
 
       // Group campaigns by sales_id
       const salesCampaignsMap = new Map<string, any[]>();
@@ -121,9 +125,23 @@ export function AdminDashboard() {
         }
         activitiesByCampaign.get(campId)!.push(act);
       }
-
-      // Calculate for each sales
+      const departmentMap = new Map<string, DepartmentSummary>();
+      
+      // Get all sales with their GM department info in one query
+      const { data: allSalesWithGM } = await supabase
+        .from("users")
+        .select("id, gm_id, gm:gm_id(department)")
+        .eq("role", "Sales");
+      
+      // Create a map of sales_id to department
+      const salesToDepartment = new Map<string, string>();
+      for (const sales of allSalesWithGM || []) {
+        const department = (sales.gm as any)?.department || "No Department";
+        salesToDepartment.set(sales.id, department);
+      }
+      
       for (const sales of salesUsers || []) {
+        const department = salesToDepartment.get(sales.id) || "No Department";
         const salesCampaigns = salesCampaignsMap.get(sales.id) || [];
         
         const targetRevenue = salesCampaigns.reduce((sum: number, camp: any) => {
@@ -138,14 +156,12 @@ export function AdminDashboard() {
           
           // Potential: akumulasi potential value terakhir tiap customer
           if (activities.length > 0) {
-            // Sort by tanggal_aktivitas descending
             const sortedActivities = [...activities].sort((a, b) => {
               const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
               const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
               return dateB - dateA;
             });
             
-            // Group by customer_id, keep only latest activity per customer
             const customerLatestActivity = new Map<string, any>();
             for (const activity of sortedActivities) {
               const customerId = activity.customer_id;
@@ -154,7 +170,6 @@ export function AdminDashboard() {
               }
             }
             
-            // Sum potential_value from latest activities per customer
             for (const activity of customerLatestActivity.values()) {
               potentialRevenue += Number(activity.potential_value) || 0;
             }
@@ -166,19 +181,28 @@ export function AdminDashboard() {
             .reduce((sum: number, act: any) => sum + (Number(act.potential_value) || 0), 0);
         }
 
-        salesSummaries.push({
-          salesId: sales.id,
-          salesName: sales.nama_lengkap || "Sales",
-          targetRevenue,
-          potentialRevenue,
-          achievementRevenue,
-          campaignCount: salesCampaigns.length,
-        });
+        if (!departmentMap.has(department)) {
+          departmentMap.set(department, {
+            department,
+            targetRevenue: 0,
+            potentialRevenue: 0,
+            achievementRevenue: 0,
+            salesCount: 0,
+            campaignCount: 0,
+          });
+        }
+
+        const deptSummary = departmentMap.get(department)!;
+        deptSummary.targetRevenue += targetRevenue;
+        deptSummary.potentialRevenue += potentialRevenue;
+        deptSummary.achievementRevenue += achievementRevenue;
+        deptSummary.salesCount += 1;
+        deptSummary.campaignCount += salesCampaigns.length;
       }
 
-      // Sort by achievement revenue
-      salesSummaries.sort((a, b) => b.achievementRevenue - a.achievementRevenue);
-      setTopSales(salesSummaries.slice(0, 8));
+      const departmentSummaries = Array.from(departmentMap.values());
+      departmentSummaries.sort((a, b) => b.targetRevenue - a.targetRevenue);
+      setDepartments(departmentSummaries);
 
       // Calculate achievement rate
       const totalAchievementRate = totalTargetRevenue > 0 
@@ -199,10 +223,6 @@ export function AdminDashboard() {
 
     loadData();
   }, [currentYear]);
-
-  const filteredTopSales = topSales.filter((s) =>
-    s.salesName.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
@@ -251,45 +271,34 @@ export function AdminDashboard() {
 
       <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <CardTitle className="text-slate-900 dark:text-slate-50">Top AM by Achievement</CardTitle>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search sales..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
-              />
-            </div>
-          </div>
-          <CardDescription className="text-slate-600 dark:text-slate-400">Berdasarkan achievement revenue dari campaigns</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Target per Department</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Target revenue, potential leads, dan achievement revenue per department</CardDescription>
         </CardHeader>
         <CardContent>
-          {filteredTopSales.length === 0 ? (
+          {departments.length === 0 ? (
             <p className="text-slate-600 dark:text-slate-400">Tidak ada data.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTopSales.map((s) => {
-                const percent = s.targetRevenue > 0 ? Math.min((s.achievementRevenue / s.targetRevenue) * 100, 100) : 0;
+              {departments.map((dept) => {
+                const percent = dept.targetRevenue > 0 ? Math.min((dept.achievementRevenue / dept.targetRevenue) * 100, 100) : 0;
                 return (
-                  <div key={s.salesId} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                  <div key={dept.department} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-900 dark:text-slate-50">{s.salesName}</h3>
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-50">{dept.department}</h3>
                       <span className="text-slate-600 dark:text-slate-400 text-sm">Achievement: {percent.toFixed(0)}%</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-2 text-xs">
                       <div>
                         <div className="text-slate-600 dark:text-slate-400">Target</div>
-                        <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {s.targetRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {dept.targetRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
                         <div className="text-slate-600 dark:text-slate-400">Potential Leads</div>
-                        <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {s.potentialRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {dept.potentialRevenue.toLocaleString('id-ID')}</div>
                       </div>
                       <div>
                         <div className="text-slate-600 dark:text-slate-400">Achievement</div>
-                        <div className="text-green-600 dark:text-green-400 font-semibold">Rp {s.achievementRevenue.toLocaleString('id-ID')}</div>
+                        <div className="text-green-600 dark:text-green-400 font-semibold">Rp {dept.achievementRevenue.toLocaleString('id-ID')}</div>
                       </div>
                     </div>
                     <div className="bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
@@ -298,7 +307,10 @@ export function AdminDashboard() {
                         style={{ width: `${percent}%` }}
                       />
                     </div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400">Campaign: {s.campaignCount}</div>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                      <span>AM: {dept.salesCount}</span>
+                      <span>Campaign: {dept.campaignCount}</span>
+                    </div>
                   </div>
                 );
               })}

@@ -89,7 +89,7 @@ export function CustomerDetailModal({ customer, onClose }: any) {
               <p className="text-slate-900 dark:text-slate-50">{customer.kota}</p>
             </div>
             <div className="col-span-2">
-              <label className="text-sm text-slate-600 dark:text-slate-400">Potential Value</label>
+              <label className="text-sm text-slate-600 dark:text-slate-400">Potential Leads</label>
               <p className="text-slate-900 dark:text-slate-50">Rp {customer.nilai_potensial?.toLocaleString('id-ID') || '0'}</p>
             </div>
             <div className="col-span-2">

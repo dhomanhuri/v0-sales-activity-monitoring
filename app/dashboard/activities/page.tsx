@@ -27,7 +27,7 @@ export default async function ActivitiesPage() {
 
   if (userProfile?.role === "Sales") {
     query = query.eq("sales_id", user.id);
-  } else if (userProfile?.role === "GM") {
+  } else if (userProfile?.role === "GM" || userProfile?.role === "GM Non Sales") {
     const { data: subordinates } = await supabase
       .from("users")
       .select("id")

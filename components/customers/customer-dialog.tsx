@@ -64,7 +64,7 @@ export function CustomerDialog({
   }, [customer, userId]);
 
   useEffect(() => {
-    if (userRole === "GM" || userRole === "Admin") {
+    if (userRole === "GM" || userRole === "GM Non Sales" || userRole === "Admin") {
       loadSalesList();
     }
   }, [userRole]);
@@ -79,7 +79,7 @@ export function CustomerDialog({
         .select("id, nama_lengkap")
         .eq("role", "Sales");
 
-      if (userRole === "GM") {
+      if (userRole === "GM" || userRole === "GM Non Sales") {
         query = query.eq("gm_id", userId);
       }
 
@@ -143,7 +143,7 @@ export function CustomerDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {(userRole === "GM" || userRole === "Admin") && (
+          {(userRole === "GM" || userRole === "GM Non Sales" || userRole === "Admin") && (
             <div>
               <Label className="text-slate-300">Sales*</Label>
               <select
@@ -264,7 +264,7 @@ export function CustomerDialog({
               </select>
             </div>
             <div>
-              <Label className="text-slate-300">Potential Value (Rp)</Label>
+              <Label className="text-slate-300">Potential Leads (Rp)</Label>
               <Input
                 type="number"
                 value={formData.nilai_potensial}

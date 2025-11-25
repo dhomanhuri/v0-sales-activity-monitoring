@@ -17,14 +17,39 @@ export default async function MasterCustomersPage() {
     .eq("id", user.id)
     .single();
 
-  // Only Admin can access
-  if (!userProfile || userProfile.role !== "Admin") {
+  if (!userProfile) {
     redirect("/dashboard");
   }
 
-  const { data: customers, error: customersError } = await supabase
+  // Get customers based on role
+  let customersQuery = supabase
     .from("master_customers")
-    .select("*")
+    .select(`
+      *,
+      sales:sales_id(id, nama_lengkap)
+    `);
+
+  if (userProfile.role === "Sales") {
+    // Sales can only see their own customers
+    customersQuery = customersQuery.eq("sales_id", user.id);
+  } else if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
+    // GM can see their team's customers
+    const { data: teamSales } = await supabase
+      .from("users")
+      .select("id")
+      .eq("role", "Sales")
+      .eq("gm_id", user.id);
+    
+    const teamSalesIds = teamSales?.map(s => s.id) || [];
+    if (teamSalesIds.length > 0) {
+      customersQuery = customersQuery.in("sales_id", teamSalesIds);
+    } else {
+      customersQuery = customersQuery.eq("sales_id", "no-sales");
+    }
+  }
+  // Admin, Presales, and Engineer can see all customers
+
+  const { data: customers, error: customersError } = await customersQuery
     .order("created_at", { ascending: false });
 
   if (customersError) {
@@ -38,7 +63,11 @@ export default async function MasterCustomersPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-2">Manage master customer data</p>
       </div>
 
-      <MasterCustomersList initialCustomers={customers || []} />
+      <MasterCustomersList 
+        initialCustomers={customers || []} 
+        userRole={userProfile.role}
+        userId={user.id}
+      />
     </div>
   );
 }

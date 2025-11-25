@@ -13,6 +13,14 @@ type SalesSummary = {
   campaignCount: number;
 };
 
+type DepartmentSummary = {
+  department: string;
+  targetRevenue: number;
+  potentialRevenue: number;
+  salesCount: number;
+  campaignCount: number;
+};
+
 export function EngineerDashboard() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
 
@@ -27,6 +35,7 @@ export function EngineerDashboard() {
     totalAchievementRate: 0,
   });
   const [topSales, setTopSales] = useState<SalesSummary[]>([]);
+  const [departments, setDepartments] = useState<DepartmentSummary[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -34,15 +43,15 @@ export function EngineerDashboard() {
       const supabase = (await import("@/lib/supabase/client")).createClient();
 
       // Basic counts
-      const [{ data: salesUsers }, { data: gmUsers }, { data: campaigns }, { data: masterCustomers }] = await Promise.all([
+      const [{ data: salesUsers }, { data: gmUsers }, { data: masterCampaigns }, { data: masterCustomers }] = await Promise.all([
         supabase.from("users").select("id, nama_lengkap").eq("role", "Sales"),
         supabase.from("users").select("id").eq("role", "GM"),
-        supabase.from("campaigns").select("id"),
+        supabase.from("master_campaigns").select("id"),
         supabase.from("master_customers").select("id"),
       ]);
       const totalSales = salesUsers?.length || 0;
       const totalGm = gmUsers?.length || 0;
-      const totalCampaigns = campaigns?.length || 0;
+      const totalCampaigns = masterCampaigns?.length || 0;
       const totalMasterCustomers = masterCustomers?.length || 0;
 
       // Calculate totals from campaigns
@@ -171,6 +180,78 @@ export function EngineerDashboard() {
       salesSummaries.sort((a, b) => b.potentialRevenue - a.potentialRevenue);
       setTopSales(salesSummaries.slice(0, 8));
 
+      // Build department summaries
+      const departmentMap = new Map<string, DepartmentSummary>();
+      
+      // Get all sales with their GM department info in one query
+      const { data: allSalesWithGM } = await supabase
+        .from("users")
+        .select("id, gm_id, gm:gm_id(department)")
+        .eq("role", "Sales");
+      
+      // Create a map of sales_id to department
+      const salesToDepartment = new Map<string, string>();
+      for (const sales of allSalesWithGM || []) {
+        const department = (sales.gm as any)?.department || "No Department";
+        salesToDepartment.set(sales.id, department);
+      }
+      
+      for (const sales of salesUsers || []) {
+        const department = salesToDepartment.get(sales.id) || "No Department";
+        const salesCampaigns = salesCampaignsMap.get(sales.id) || [];
+        
+        const targetRevenue = salesCampaigns.reduce((sum: number, camp: any) => {
+          return sum + (Number(camp.target_revenue) || 0);
+        }, 0);
+
+        let potentialRevenue = 0;
+        
+        for (const campaign of salesCampaigns) {
+          const activities = activitiesByCampaign.get(campaign.id) || [];
+          
+          // Potential: akumulasi potential value terakhir tiap customer
+          if (activities.length > 0) {
+            const sortedActivities = [...activities].sort((a, b) => {
+              const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+              const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+              return dateB - dateA;
+            });
+            
+            const customerLatestActivity = new Map<string, any>();
+            for (const activity of sortedActivities) {
+              const customerId = activity.customer_id;
+              if (customerId && !customerLatestActivity.has(customerId)) {
+                customerLatestActivity.set(customerId, activity);
+              }
+            }
+            
+            for (const activity of customerLatestActivity.values()) {
+              potentialRevenue += Number(activity.potential_value) || 0;
+            }
+          }
+        }
+
+        if (!departmentMap.has(department)) {
+          departmentMap.set(department, {
+            department,
+            targetRevenue: 0,
+            potentialRevenue: 0,
+            salesCount: 0,
+            campaignCount: 0,
+          });
+        }
+
+        const deptSummary = departmentMap.get(department)!;
+        deptSummary.targetRevenue += targetRevenue;
+        deptSummary.potentialRevenue += potentialRevenue;
+        deptSummary.salesCount += 1;
+        deptSummary.campaignCount += salesCampaigns.length;
+      }
+
+      const departmentSummaries = Array.from(departmentMap.values());
+      departmentSummaries.sort((a, b) => b.targetRevenue - a.targetRevenue);
+      setDepartments(departmentSummaries);
+
       // Calculate achievement rate
       const totalAchievementRate = totalTargetRevenue > 0 
         ? (totalAchievementRevenue / totalTargetRevenue) * 100 
@@ -237,6 +318,44 @@ export function EngineerDashboard() {
               <div className="text-purple-600 dark:text-purple-400 text-2xl font-semibold">{kpis.totalAchievementRate.toFixed(1)}%</div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-slate-900 dark:text-slate-50">Target per Department</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">Target revenue dan potential leads per department</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {departments.length === 0 ? (
+            <p className="text-slate-600 dark:text-slate-400">Tidak ada data.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {departments.map((dept) => {
+                return (
+                  <div key={dept.department} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-900 dark:text-slate-50">{dept.department}</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mb-2 text-xs">
+                      <div>
+                        <div className="text-slate-600 dark:text-slate-400">Target</div>
+                        <div className="text-slate-900 dark:text-slate-50 font-semibold">Rp {dept.targetRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-600 dark:text-slate-400">Potential</div>
+                        <div className="text-blue-600 dark:text-blue-400 font-semibold">Rp {dept.potentialRevenue.toLocaleString('id-ID')}</div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
+                      <span>AM: {dept.salesCount}</span>
+                      <span>Campaign: {dept.campaignCount}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

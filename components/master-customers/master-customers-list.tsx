@@ -8,7 +8,15 @@ import { Plus, Search, Trash2, Edit } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 import { MasterCustomerDialog } from "./master-customer-dialog";
 
-export function MasterCustomersList({ initialCustomers }: { initialCustomers: any[] }) {
+export function MasterCustomersList({ 
+  initialCustomers, 
+  userRole, 
+  userId 
+}: { 
+  initialCustomers: any[]; 
+  userRole?: string;
+  userId?: string;
+}) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
   const [showDialog, setShowDialog] = useState(false);
@@ -77,6 +85,8 @@ export function MasterCustomersList({ initialCustomers }: { initialCustomers: an
             setEditingCustomer(null);
           }}
           onSave={handleCustomerSaved}
+          userRole={userRole}
+          userId={userId}
         />
       )}
 
@@ -97,8 +107,13 @@ export function MasterCustomersList({ initialCustomers }: { initialCustomers: an
                         {customer.name}
                       </h3>
                       {customer.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
                           {customer.description}
+                        </p>
+                      )}
+                      {customer.sales && (
+                        <p className="text-xs text-slate-500 dark:text-slate-500">
+                          AM: {customer.sales.nama_lengkap}
                         </p>
                       )}
                     </div>

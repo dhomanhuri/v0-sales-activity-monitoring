@@ -47,11 +47,24 @@ export function CampaignActivityDialog({
     const loadData = async () => {
       const supabase = createClient();
       
-      // Load customers
-      const { data: customersData } = await supabase
+      // Get campaign to find sales_id
+      const { data: campaignData } = await supabase
+        .from("campaigns")
+        .select("sales_id")
+        .eq("id", campaignId)
+        .single();
+
+      // Load customers - filter by sales_id from campaign
+      let customersQuery = supabase
         .from("master_customers")
         .select("id, name")
         .order("name");
+
+      if (campaignData?.sales_id) {
+        customersQuery = customersQuery.eq("sales_id", campaignData.sales_id);
+      }
+
+      const { data: customersData } = await customersQuery;
       setCustomers(customersData || []);
 
       // Load presales and engineer users
@@ -332,7 +345,7 @@ export function CampaignActivityDialog({
 
           <div>
             <Label className="text-slate-700 dark:text-slate-300">
-              {formData.jenis_aktivitas === "Closing" ? "Potential Revenue (Rp)" : "Potential Value (Rp)"}
+              {formData.jenis_aktivitas === "Closing" ? "Potential Revenue (Rp)" : "Potential Leads (Rp)"}
               {formData.jenis_aktivitas === "Closing" && <span className="text-red-500">*</span>}
             </Label>
             <Input

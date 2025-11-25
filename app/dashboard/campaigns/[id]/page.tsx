@@ -40,7 +40,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
   // Check access
   if (userProfile.role === "Sales" && campaign.sales_id !== user.id) {
     redirect("/dashboard/campaigns");
-  } else if (userProfile.role === "GM") {
+  } else if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
     const { data: salesUser } = await supabase
       .from("users")
       .select("gm_id")

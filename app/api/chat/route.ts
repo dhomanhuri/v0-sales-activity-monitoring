@@ -37,7 +37,7 @@ async function getDataContext(userId: string, userRole: string) {
 
     if (userRole === 'Sales') {
       campaignsQuery = campaignsQuery.eq('sales_id', userId);
-    } else if (userRole === 'GM') {
+    } else if (userRole === 'GM' || userRole === 'GM Non Sales') {
       const { data: teamSales } = await supabase
         .from('users')
         .select('id')
@@ -89,7 +89,7 @@ async function getDataContext(userId: string, userRole: string) {
         activities.forEach((act: any, idx: number) => {
           context += `${idx + 1}. Activity: ${act.jenis_aktivitas}\n`;
           context += `   Date: ${act.tanggal_aktivitas || 'N/A'}\n`;
-          context += `   Potential Value: ${act.potential_value ? `Rp ${Number(act.potential_value).toLocaleString('id-ID')}` : 'N/A'}\n`;
+          context += `   Potential Leads: ${act.potential_value ? `Rp ${Number(act.potential_value).toLocaleString('id-ID')}` : 'N/A'}\n`;
           context += `   Campaign: ${(act.campaigns as any)?.master_campaigns?.name || 'N/A'}\n`;
           context += `   Customer: ${(act.master_customers as any)?.name || 'N/A'}\n\n`;
         });
@@ -115,13 +115,13 @@ async function getDataContext(userId: string, userRole: string) {
     }
 
     // Get targets summary if available
-    if (userRole === 'Admin' || userRole === 'GM') {
+    if (userRole === 'Admin' || userRole === 'GM' || userRole === 'GM Non Sales') {
       let salesQuery = supabase
         .from('users')
         .select('id, nama_lengkap, email')
         .eq('role', 'Sales');
 
-      if (userRole === 'GM') {
+      if (userRole === 'GM' || userRole === 'GM Non Sales') {
         salesQuery = salesQuery.eq('gm_id', userId);
       }
 

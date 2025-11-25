@@ -38,7 +38,7 @@ export default async function CampaignsPage() {
   if (userProfile.role === "Sales") {
     // Sales hanya melihat dirinya sendiri
     salesQuery = salesQuery.eq("id", user.id);
-  } else if (userProfile.role === "GM") {
+  } else if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
     // GM melihat sales di bawahnya
     salesQuery = salesQuery.eq("gm_id", user.id);
   } else if (userProfile.role === "Presales" || userProfile.role === "Engineer") {
