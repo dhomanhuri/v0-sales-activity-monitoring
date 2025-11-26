@@ -60,7 +60,7 @@ async function getDataContext(userId: string, userRole: string) {
         context += `${idx + 1}. Campaign: ${(camp.master_campaigns as any)?.name || 'N/A'}\n`;
         context += `   Description: ${(camp.master_campaigns as any)?.description || 'N/A'}\n`;
         context += `   Target Revenue: Rp ${(camp.target_revenue || 0).toLocaleString('id-ID')}\n`;
-        context += `   Sales: ${(camp.users as any)?.nama_lengkap || 'N/A'}\n`;
+        context += `   AM: ${(camp.users as any)?.nama_lengkap || 'N/A'}\n`;
         context += `   Campaign ID: ${camp.id}\n\n`;
       });
     } else {
@@ -126,13 +126,13 @@ async function getDataContext(userId: string, userRole: string) {
       }
 
       const { data: salesUsers } = await salesQuery;
-      context += `Sales Users:\n`;
+      context += `AM Users:\n`;
       if (salesUsers && salesUsers.length > 0) {
         salesUsers.forEach((sales: any, idx: number) => {
           context += `${idx + 1}. ${sales.nama_lengkap} (${sales.email})\n`;
         });
       } else {
-        context += `No sales users found.\n`;
+        context += `No AM users found.\n`;
       }
     }
 
@@ -181,7 +181,7 @@ Guidelines:
   * Campaign details and descriptions
   * Activity summaries
   * Revenue metrics (Target, Potential, Achievement)
-  * Sales performance
+  * AM performance
   * Recent activities
 - Always respond in the same language as the user's question (Indonesian or English)
 - If asked about data that's not in the context, politely explain that you need more information or suggest checking the dashboard directly.`;

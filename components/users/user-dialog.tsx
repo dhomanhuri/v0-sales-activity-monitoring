@@ -386,7 +386,7 @@ export function UserDialog({
               }
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
             >
-              <option value="Sales">Sales</option>
+              <option value="Sales">AM</option>
               <option value="GM">General Manager</option>
               <option value="GM Non Sales">GM Non Sales</option>
               <option value="Admin">Admin</option>

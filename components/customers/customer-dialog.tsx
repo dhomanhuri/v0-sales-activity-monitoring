@@ -145,7 +145,7 @@ export function CustomerDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           {(userRole === "GM" || userRole === "GM Non Sales" || userRole === "Admin") && (
             <div>
-              <Label className="text-slate-300">Sales*</Label>
+              <Label className="text-slate-300">AM*</Label>
               <select
                 value={formData.sales_id}
                 onChange={(e) =>
@@ -155,7 +155,7 @@ export function CustomerDialog({
                 required
                 disabled={loadingSales}
               >
-                <option value="">Pilih Sales</option>
+                <option value="">Pilih AM</option>
                 {salesList.map((sales) => (
                   <option key={sales.id} value={sales.id}>
                     {sales.nama_lengkap}

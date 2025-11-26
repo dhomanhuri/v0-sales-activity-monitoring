@@ -160,7 +160,7 @@ export function MasterCustomerDialog({
 
           {(userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales") && (
             <div>
-              <Label className="text-slate-700 dark:text-slate-300">Sales (AM)</Label>
+              <Label className="text-slate-700 dark:text-slate-300">AM</Label>
               <select
                 value={formData.sales_id}
                 onChange={(e) =>
@@ -169,7 +169,7 @@ export function MasterCustomerDialog({
                 className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-50"
                 required
               >
-                <option value="">Select Sales</option>
+                <option value="">Select AM</option>
                 {salesList.map((sales) => (
                   <option key={sales.id} value={sales.id}>
                     {sales.nama_lengkap}

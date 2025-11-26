@@ -172,14 +172,14 @@ export function ActivityDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           {(userRole === "GM" || userRole === "GM Non Sales" || userRole === "Admin") && (
             <div>
-              <Label className="text-slate-300">Sales*</Label>
+              <Label className="text-slate-300">AM*</Label>
               <select
                 value={selectedSalesId}
                 onChange={(e) => setSelectedSalesId(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-50"
                 required
               >
-                <option value="">Select Sales</option>
+                <option value="">Select AM</option>
                 {salesList && salesList.length > 0 ? (
                   salesList.map((sales) => (
                     <option key={sales.id} value={sales.id}>
@@ -187,7 +187,7 @@ export function ActivityDialog({
                     </option>
                   ))
                 ) : (
-                  <option disabled>No sales available</option>
+                  <option disabled>No AM available</option>
                 )}
               </select>
             </div>

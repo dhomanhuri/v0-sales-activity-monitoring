@@ -242,7 +242,7 @@ export function AdminDashboard() {
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalGm}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">
-              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Campaign</div>
+              <div className="text-slate-600 dark:text-slate-400 text-xs mb-1">Total Campaigns</div>
               <div className="text-slate-900 dark:text-slate-50 text-2xl font-semibold">{kpis.totalCampaigns}</div>
             </div>
             <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600">

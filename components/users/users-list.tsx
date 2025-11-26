@@ -80,7 +80,7 @@ export function UsersList({ initialUsers }: { initialUsers: any[] }) {
           <option value="">All Roles</option>
           <option value="Admin">Admin</option>
           <option value="GM">General Manager</option>
-          <option value="Sales">Sales</option>
+          <option value="Sales">AM</option>
           <option value="Presales">Presales</option>
           <option value="Engineer">Engineer</option>
         </select>
