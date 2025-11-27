@@ -390,6 +390,7 @@ export function UserDialog({
               <option value="GM">General Manager</option>
               <option value="GM Non Sales">GM Non Sales</option>
               <option value="Admin">Admin</option>
+              <option value="Editor">Editor</option>
               <option value="Presales">Presales</option>
               <option value="Engineer">Engineer</option>
             </select>

@@ -17,8 +17,8 @@ export default async function MasterCampaignsPage() {
     .eq("id", user.id)
     .single();
 
-  // Only Admin can access
-  if (!userProfile || userProfile.role !== "Admin") {
+  // Only Admin and Editor can access
+  if (!userProfile || (userProfile.role !== "Admin" && userProfile.role !== "Editor")) {
     redirect("/dashboard");
   }
 
@@ -34,7 +34,7 @@ export default async function MasterCampaignsPage() {
         <p className="text-slate-600 dark:text-slate-400 mt-2">Manage master campaign data</p>
       </div>
 
-      <MasterCampaignsList initialCampaigns={campaigns || []} />
+      <MasterCampaignsList initialCampaigns={campaigns || []} userRole={userProfile.role} />
     </div>
   );
 }

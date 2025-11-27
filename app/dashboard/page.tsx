@@ -38,6 +38,7 @@ export default async function DashboardPage() {
               {userProfile.role === 'Sales' && 'Summary of your AM activities'}
               {(userProfile.role === 'GM' || userProfile.role === 'GM Non Sales') && 'Your AM team performance'}
               {userProfile.role === 'Admin' && 'Overall system summary'}
+              {userProfile.role === 'Editor' && 'System overview (Read-Only)'}
               {userProfile.role === 'Presales' && 'System overview (Read-Only)'}
               {userProfile.role === 'Engineer' && 'System overview (Read-Only)'}
         </p>
@@ -49,6 +50,7 @@ export default async function DashboardPage() {
       {userProfile.role === 'Sales' && <SalesDashboard userId={user.id} />}
       {(userProfile.role === 'GM' || userProfile.role === 'GM Non Sales') && <GMDashboard userId={user.id} />}
       {userProfile.role === 'Admin' && <AdminDashboard />}
+      {userProfile.role === 'Editor' && <PresalesDashboard />}
       {userProfile.role === 'Presales' && <PresalesDashboard />}
       {userProfile.role === 'Engineer' && <EngineerDashboard />}
       </div>

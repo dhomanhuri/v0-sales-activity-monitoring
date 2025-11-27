@@ -8,7 +8,7 @@ import { Plus, Search, Trash2, Edit } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 import { MasterCampaignDialog } from "./master-campaign-dialog";
 
-export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: any[] }) {
+export function MasterCampaignsList({ initialCampaigns, userRole }: { initialCampaigns: any[]; userRole?: string }) {
   const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [search, setSearch] = useState("");
   const [showDialog, setShowDialog] = useState(false);
@@ -57,16 +57,18 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
             className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
           />
         </div>
-        <Button
-          onClick={() => {
-            setEditingCampaign(null);
-            setShowDialog(true);
-          }}
-          className="gap-2 bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          Add Campaign
-        </Button>
+        {(userRole === "Admin" || userRole === "Editor") && (
+          <Button
+            onClick={() => {
+              setEditingCampaign(null);
+              setShowDialog(true);
+            }}
+            className="gap-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add Campaign
+          </Button>
+        )}
       </div>
 
       {showDialog && (
@@ -102,27 +104,29 @@ export function MasterCampaignsList({ initialCampaigns }: { initialCampaigns: an
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingCampaign(campaign);
-                          setShowDialog(true);
-                        }}
-                        className="text-blue-400 hover:text-blue-300"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCampaign(campaign.id)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {(userRole === "Admin" || userRole === "Editor") && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingCampaign(campaign);
+                            setShowDialog(true);
+                          }}
+                          className="text-blue-400 hover:text-blue-300"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

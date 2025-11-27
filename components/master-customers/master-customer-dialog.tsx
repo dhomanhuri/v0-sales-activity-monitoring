@@ -50,7 +50,7 @@ export function MasterCustomerDialog({
         // Sales can only assign to themselves
         query = query.eq("id", userId);
       }
-      // Admin can see all sales
+      // Admin and Editor can see all sales
 
       const { data } = await query.order("nama_lengkap", { ascending: true });
       setSalesList(data || []);
@@ -158,7 +158,7 @@ export function MasterCustomerDialog({
             />
           </div>
 
-          {(userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales") && (
+          {(userRole === "Admin" || userRole === "Editor" || userRole === "GM" || userRole === "GM Non Sales") && (
             <div>
               <Label className="text-slate-700 dark:text-slate-300">AM</Label>
               <select

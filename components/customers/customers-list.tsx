@@ -26,7 +26,7 @@ export function CustomersList({ initialCustomers, userRole, userId }: any) {
   const [showDialog, setShowDialog] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const isPresales = userRole === "Presales" || userRole === "Engineer";
+  const isPresales = userRole === "Presales" || userRole === "Engineer" || userRole === "Editor";
 
   const filteredCustomers = customers.filter((customer) => {
     const matchesSearch =

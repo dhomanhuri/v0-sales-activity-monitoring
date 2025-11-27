@@ -21,7 +21,7 @@ export function ActivitiesList({ initialActivities, userRole, userId }: any) {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showDialog, setShowDialog] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
-  const isPresales = userRole === "Presales" || userRole === "Engineer";
+  const isPresales = userRole === "Presales" || userRole === "Engineer" || userRole === "Editor";
 
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch =

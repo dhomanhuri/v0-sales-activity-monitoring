@@ -41,11 +41,11 @@ export default async function CampaignsPage() {
   } else if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
     // GM melihat sales di bawahnya
     salesQuery = salesQuery.eq("gm_id", user.id);
-  } else if (userProfile.role === "Presales" || userProfile.role === "Engineer") {
-    // Presales dan Engineer melihat semua sales (read-only)
+  } else if (userProfile.role === "Presales" || userProfile.role === "Engineer" || userProfile.role === "Editor") {
+    // Presales, Engineer, dan Editor melihat semua sales (read-only)
     // No filter needed
   }
-  // Admin, Presales dan Engineer melihat semua sales
+  // Admin, Presales, Engineer, dan Editor melihat semua sales
 
   const { data: sales } = await salesQuery.order("nama_lengkap", { ascending: true });
 

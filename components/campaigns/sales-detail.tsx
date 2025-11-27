@@ -18,7 +18,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("name-asc");
   const router = useRouter();
-  const isPresales = userRole === "Presales" || userRole === "Engineer";
+  const isPresales = userRole === "Presales" || userRole === "Engineer" || userRole === "Editor";
 
   const handleCampaignSaved = (updatedCampaign: any) => {
     if (editingCampaign) {

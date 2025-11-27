@@ -47,7 +47,7 @@ export default async function MasterCustomersPage() {
       customersQuery = customersQuery.eq("sales_id", "no-sales");
     }
   }
-  // Admin, Presales, and Engineer can see all customers
+  // Admin, Editor, Presales, and Engineer can see all customers
 
   const { data: customers, error: customersError } = await customersQuery
     .order("created_at", { ascending: false });

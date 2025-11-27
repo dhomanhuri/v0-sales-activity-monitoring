@@ -66,10 +66,10 @@ export function Sidebar({ user }: { user: any }) {
           );
         })}
 
-        {user?.role === "Admin" && (
+        {(user?.role === "Admin" || user?.role === "Editor") && (
           <>
             <div className="py-3 px-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-4">
-              Admin
+              {user?.role === "Admin" ? "Admin" : "Editor"}
             </div>
             {adminMenuItems.map((item) => {
               const isActive = pathname === item.href;
