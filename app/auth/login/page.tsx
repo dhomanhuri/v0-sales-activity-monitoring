@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <div className="w-full max-w-md">
         <div className="flex flex-col gap-6">
           <Card className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl">

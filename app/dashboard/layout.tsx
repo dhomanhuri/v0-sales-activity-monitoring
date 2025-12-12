@@ -30,11 +30,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+    <div className="flex h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       <Sidebar user={userProfile} />
       <div className="flex-1 flex flex-col">
         <TopNav user={userProfile} />
-        <main className="flex-1 overflow-auto bg-gradient-to-br from-orange-50/50 via-white to-orange-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-orange-100/80 via-orange-50/50 to-orange-100/80 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
           {children}
         </main>
       </div>
