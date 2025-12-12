@@ -34,7 +34,7 @@ export function TopNav({ user }: { user: any }) {
       </div>
       <Link
         href="/dashboard/profile"
-        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-50 to-orange-100 dark:from-slate-700 dark:to-slate-700 hover:from-orange-100 hover:to-orange-200 dark:hover:from-slate-600 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 hover:text-orange-700 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-orange-100 to-orange-200 dark:from-slate-700 dark:to-slate-700 hover:from-orange-200 hover:to-orange-300 dark:hover:from-slate-600 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 hover:text-orange-700 dark:hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
       >
         <User className="h-4 w-4" />
         <span className="font-medium">Profile</span>
