@@ -198,7 +198,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     });
   };
 
-  const handleActivitySaved = (updatedActivity: any) => {
+  const handleActivitySaved = async (updatedActivity: any) => {
     if (editingActivity) {
       setActivities(activities.map((a: any) => a.id === updatedActivity.id ? updatedActivity : a));
       setEditingActivity(null);
@@ -206,6 +206,8 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
       setActivities([updatedActivity, ...activities]);
     }
     setShowDialog(false);
+    // Refresh the page to get latest data from server
+    router.refresh();
   };
 
   const handleDeleteActivity = async (activityId: string) => {
