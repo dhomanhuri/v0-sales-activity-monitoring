@@ -28,10 +28,12 @@ export function SalesList({ initialSales }: { initialSales: any[] }) {
   const filteredAndSortedSales = useMemo(() => {
     // Filter first
     let filtered = initialSales.filter((sales) => {
+      const gm = sales.gm as any;
       const matchesSearch =
         sales.nama_lengkap?.toLowerCase().includes(search.toLowerCase()) ||
         sales.email?.toLowerCase().includes(search.toLowerCase()) ||
-        ((sales.gm as any)?.department || "").toLowerCase().includes(search.toLowerCase());
+        (gm?.department || "").toLowerCase().includes(search.toLowerCase()) ||
+        (gm?.nama_lengkap || "").toLowerCase().includes(search.toLowerCase());
       
       const matchesDepartment = !departmentFilter || (sales.gm as any)?.department === departmentFilter;
       
@@ -86,7 +88,7 @@ export function SalesList({ initialSales }: { initialSales: any[] }) {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-slate-400" />
             <Input
-              placeholder="Search by name, email, or department..."
+              placeholder="Search by name, email, department, or GM name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-50"
@@ -237,14 +239,22 @@ export function SalesList({ initialSales }: { initialSales: any[] }) {
                     </button>
                   </div>
 
-                  {/* Department */}
-                  <div className="mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                  {/* Department and GM */}
+                  <div className="mb-4 pb-4 border-b border-slate-200 dark:border-slate-700 space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-slate-500 dark:text-slate-400">Department:</span>
                       <span className="font-medium text-slate-700 dark:text-slate-300">
                         {department}
                       </span>
                     </div>
+                    {gm?.nama_lengkap && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">GM:</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {gm.nama_lengkap}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Stats Grid */}
