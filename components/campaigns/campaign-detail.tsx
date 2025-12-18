@@ -116,6 +116,72 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     return Array.from(types).sort();
   }, [activities]);
 
+  // Prepare timeline data for horizontal Gantt-style timeline
+  const timelineData = useMemo(() => {
+    if (filteredActivities.length === 0) return null;
+
+    // Get min and max dates from activities
+    const dates = filteredActivities.map((activity: any) => 
+      new Date(activity.tanggal_aktivitas || activity.created_at)
+    );
+    const minDate = new Date(Math.min(...dates.map((d: Date) => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d: Date) => d.getTime())));
+
+    // Set to start of month for min and end of month for max
+    const startMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
+
+    // Generate months array
+    const months: Array<{ year: number; month: number; startDate: Date; endDate: Date; label: string }> = [];
+    const current = new Date(startMonth);
+    
+    while (current <= endMonth) {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const monthStart = new Date(year, month, 1);
+      const monthEnd = new Date(year, month + 1, 0);
+      
+      months.push({
+        year,
+        month,
+        startDate: monthStart,
+        endDate: monthEnd,
+        label: current.toLocaleDateString('en-US', { month: 'short' })
+      });
+      
+      current.setMonth(month + 1);
+    }
+
+    // Calculate total days span
+    const totalDays = Math.ceil((endMonth.getTime() - startMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const startTime = startMonth.getTime();
+
+    // Prepare activities with position and width
+    const timelineActivities = filteredActivities.map((activity: any) => {
+      const activityDate = new Date(activity.tanggal_aktivitas || activity.created_at);
+      const daysFromStart = Math.ceil((activityDate.getTime() - startTime) / (1000 * 60 * 60 * 24));
+      
+      // Each activity is represented as a point (single day), but we'll make it a small bar
+      const leftPercent = (daysFromStart / totalDays) * 100;
+      const widthPercent = Math.max(2, 100 / totalDays); // Minimum 2% width or based on day width
+
+      return {
+        ...activity,
+        leftPercent,
+        widthPercent,
+        date: activityDate
+      };
+    });
+
+    return {
+      startDate: startMonth,
+      endDate: endMonth,
+      totalDays,
+      months,
+      activities: timelineActivities
+    };
+  }, [filteredActivities]);
+
   // Sort and group filtered activities by customer
   const groupedActivities = useMemo(() => {
     const groups = new Map<string, any[]>();
@@ -671,6 +737,228 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           )}
         </CardContent>
       </Card>
+
+      {/* Gantt Chart Timeline Design */}
+      {timelineData && filteredActivities.length > 0 && (
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden" style={{ width: 'calc(85vw - 4rem)', maxWidth: 'calc(100vw - 4rem)' }}>
+          <CardHeader className="bg-gradient-to-r from-orange-50/50 via-blue-50/30 to-purple-50/30 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 pb-4 border-b border-slate-200 dark:border-slate-700">
+            <CardTitle className="text-slate-900 dark:text-slate-50 text-xl font-bold flex items-center gap-2">
+              <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-blue-500 rounded-full"></div>
+              Activity Timeline
+            </CardTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
+              Gantt chart view of campaign activities
+            </p>
+          </CardHeader>
+          <CardContent className="p-0 w-full overflow-hidden">
+            <div className="overflow-x-auto" style={{ width: '100%' }}>
+              {(() => {
+                // Generate all days in the timeline range
+                const allDays: Array<{ date: Date; dayOfWeek: number; isWeekend: boolean }> = [];
+                const current = new Date(timelineData.startDate);
+                
+                while (current <= timelineData.endDate) {
+                  const dayOfWeek = current.getDay();
+                  allDays.push({
+                    date: new Date(current),
+                    dayOfWeek,
+                    isWeekend: dayOfWeek === 0 || dayOfWeek === 6
+                  });
+                  current.setDate(current.getDate() + 1);
+                }
+                
+                // Group activities by customer
+                const activitiesByCustomer = new Map<string, any[]>();
+                timelineData.activities.forEach((activity: any) => {
+                  const customerId = activity.customer_id || 'no-customer';
+                  const customerName = (activity.master_customers as any)?.name || 'No Customer';
+                  const key = `${customerId}|${customerName}`;
+                  
+                  if (!activitiesByCustomer.has(key)) {
+                    activitiesByCustomer.set(key, []);
+                  }
+                  activitiesByCustomer.get(key)!.push(activity);
+                });
+                
+                const colors = [
+                  { bg: 'bg-green-500', border: 'border-green-600', text: 'text-green-700 dark:text-green-300', circle: 'bg-green-500' },
+                  { bg: 'bg-orange-500', border: 'border-orange-600', text: 'text-orange-700 dark:text-orange-300', circle: 'bg-orange-500' },
+                  { bg: 'bg-blue-500', border: 'border-blue-600', text: 'text-blue-700 dark:text-blue-300', circle: 'bg-blue-500' },
+                  { bg: 'bg-purple-500', border: 'border-purple-600', text: 'text-purple-700 dark:text-purple-300', circle: 'bg-purple-500' },
+                  { bg: 'bg-pink-500', border: 'border-pink-600', text: 'text-pink-700 dark:text-pink-300', circle: 'bg-pink-500' },
+                  { bg: 'bg-indigo-500', border: 'border-indigo-600', text: 'text-indigo-700 dark:text-indigo-300', circle: 'bg-indigo-500' },
+                ];
+                
+                // Calculate minimum width based on number of days
+                const minWidth = Math.max(800, allDays.length * 60 + 256); // 256px for sidebar, 60px per day
+                
+                return (
+                  <div style={{ minWidth: `${minWidth}px`, width: 'max-content' }}>
+                    {/* Calendar Header */}
+                    <div className="sticky top-0 z-30 bg-white dark:bg-slate-800 border-b-2 border-slate-300 dark:border-slate-600 shadow-sm">
+                      <div className="flex">
+                        {/* Left sidebar for task names - sticky */}
+                        <div className="sticky left-0 z-40 w-64 border-r-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-3 font-semibold text-sm text-slate-700 dark:text-slate-300 shadow-sm">
+                          Task
+                        </div>
+                      
+                      {/* Calendar days */}
+                      <div className="flex-1 flex">
+                        {allDays.map((day, idx) => {
+                          const dayLabel = ['S', 'M', 'T', 'W', 'T', 'F', 'S'][day.dayOfWeek];
+                          const dateLabel = day.date.getDate();
+                          const isToday = day.date.toDateString() === new Date().toDateString();
+                          
+                          return (
+                            <div
+                              key={idx}
+                              className={`flex-1 min-w-[60px] border-r border-slate-200 dark:border-slate-700 ${
+                                day.isWeekend ? 'bg-slate-100 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-800'
+                              } ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                            >
+                              <div className="text-center py-2 border-b border-slate-200 dark:border-slate-700">
+                                <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                                  {dayLabel}
+                                </div>
+                                <div className={`text-sm font-bold mt-1 ${
+                                  isToday 
+                                    ? 'text-blue-600 dark:text-blue-400' 
+                                    : 'text-slate-900 dark:text-slate-50'
+                                }`}>
+                                  {dateLabel}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Activity Rows */}
+                  <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {Array.from(activitiesByCustomer.entries()).map(([customerKey, customerActivities], customerIndex) => {
+                      const [, customerName] = customerKey.split('|');
+                      const color = colors[customerIndex % colors.length];
+                      
+                      return (
+                        <div key={customerKey} className="group">
+                          {/* Customer Header */}
+                          <div className="flex hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <div className="w-64 border-r-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-3 flex items-center gap-2">
+                              <div className={`w-1 h-6 ${color.bg} rounded-full`}></div>
+                              <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                                {customerName}
+                              </div>
+                            </div>
+                            <div className="flex-1 flex">
+                              {allDays.map((day, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex-1 min-w-[60px] border-r border-slate-200 dark:border-slate-700 ${
+                                    day.isWeekend ? 'bg-slate-100 dark:bg-slate-800/50' : ''
+                                  }`}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Activities for this customer */}
+                          {customerActivities
+                            .sort((a: any, b: any) => {
+                              const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+                              const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+                              return dateA - dateB;
+                            })
+                            .map((activity: any, activityIndex: number) => {
+                              const activityDate = new Date(activity.tanggal_aktivitas || activity.created_at);
+                              const dayIndex = allDays.findIndex(d => 
+                                d.date.toDateString() === activityDate.toDateString()
+                              );
+                              
+                              // Get PIC initials
+                              const pic = activity.pic || '';
+                              const picInitials = pic
+                                .split(' ')
+                                .map((n: string) => n[0])
+                                .join('')
+                                .toUpperCase()
+                                .slice(0, 2) || '?';
+                              
+                              return (
+                                <div
+                                  key={activity.id}
+                                  className="flex hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                  onClick={() => {
+                                    setEditingActivity(activity);
+                                    setShowDialog(true);
+                                  }}
+                                >
+                                  {/* Task name column - sticky */}
+                                  <div className="sticky left-0 z-10 w-64 border-r-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-3 flex items-center gap-3 shadow-sm">
+                                    <div className={`w-8 h-8 ${color.circle} rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white dark:border-slate-800 shadow-sm`}>
+                                      {picInitials}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`text-sm font-semibold ${color.text} truncate`}>
+                                        {activity.jenis_aktivitas}
+                                      </div>
+                                      {activity.pic && (
+                                        <div className="text-xs text-slate-600 dark:text-slate-400 truncate">
+                                          {activity.pic}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Timeline bars */}
+                                  <div className="flex-1 flex relative">
+                                    {allDays.map((day, idx) => {
+                                      const isActivityDay = idx === dayIndex;
+                                      const isToday = day.date.toDateString() === new Date().toDateString();
+                                      
+                                      return (
+                                        <div
+                                          key={idx}
+                                          className={`flex-1 min-w-[60px] border-r border-slate-200 dark:border-slate-700 relative ${
+                                            day.isWeekend ? 'bg-slate-100 dark:bg-slate-800/50' : ''
+                                          } ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                                        >
+                                          {isActivityDay && (
+                                            <div className="absolute inset-y-0 left-0 right-0 flex items-center">
+                                              <div
+                                                className={`h-8 ${color.bg} ${color.border} border-2 rounded-lg shadow-md flex items-center justify-between px-2 mx-1 group-hover:shadow-lg transition-all cursor-pointer`}
+                                                title={`${activity.jenis_aktivitas}\n${customerName}\n${activityDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`}
+                                              >
+                                                <span className="text-xs font-bold text-white">
+                                                  1d
+                                                </span>
+                                                {activity.potential_value && (
+                                                  <span className="text-xs font-semibold text-white/90">
+                                                    Rp {parseFloat(activity.potential_value).toLocaleString('id-ID', { maximumFractionDigits: 0 })}
+                                                  </span>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
