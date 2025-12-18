@@ -845,7 +845,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                         <div key={customerKey} className="group">
                           {/* Customer Header */}
                           <div className="flex hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                            <div className="w-64 border-r-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-3 flex items-center gap-2">
+                            <div className="sticky left-0 z-20 w-64 border-r-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-3 flex items-center gap-2 shadow-sm">
                               <div className={`w-1 h-6 ${color.bg} rounded-full`}></div>
                               <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                                 {customerName}
