@@ -4,12 +4,13 @@ import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Filter, X, ArrowUpDown, Globe, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, ChevronDown, ChevronUp, Search, Filter, X, ArrowUpDown, Globe, Users, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CampaignActivityDialog } from "./campaign-activity-dialog";
+import { ActivityTargetDialog } from "./activity-target-dialog";
 import { createClient } from "@/lib/supabase/client";
 
-export function CampaignDetail({ campaign, activities: initialActivities, userRole, userId }: any) {
+export function CampaignDetail({ campaign, activities: initialActivities, userRole, userId, activityTargets: initialTargets }: any) {
   const router = useRouter();
   const [activities, setActivities] = useState(initialActivities);
   const [showDialog, setShowDialog] = useState(false);
@@ -26,6 +27,12 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const [activityTypeFilter, setActivityTypeFilter] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<string>("date-desc");
+  const [activityTargets, setActivityTargets] = useState(initialTargets || []);
+  const [showTargetDialog, setShowTargetDialog] = useState(false);
+  const [editingTarget, setEditingTarget] = useState<any>(null);
+  const [targetSalesId, setTargetSalesId] = useState<string>("");
+  const [targetSalesName, setTargetSalesName] = useState<string>("");
+  const isGM = userRole === "GM" || userRole === "GM Non Sales";
 
   const canEdit = (userRole === "Admin" || userRole === "GM" || userRole === "GM Non Sales" || campaign.sales_id === userId) && userRole !== "Presales" && userRole !== "Engineer" && userRole !== "Editor";
   const isPresales = userRole === "Presales" || userRole === "Engineer" || userRole === "Editor";
@@ -291,6 +298,45 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
     } catch (err: any) {
       alert("Failed to delete activity: " + err.message);
     }
+  };
+
+  const handleTargetSaved = async () => {
+    // Reload targets
+    const supabase = createClient();
+    const { data: targets } = await supabase
+      .from("activity_targets")
+      .select("*")
+      .eq("campaign_id", campaign.id);
+    setActivityTargets(targets || []);
+    router.refresh();
+  };
+
+  const handleDeleteTarget = async (targetId: string) => {
+    if (!confirm("Are you sure you want to delete this target?")) return;
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("activity_targets")
+        .delete()
+        .eq("id", targetId);
+
+      if (error) throw error;
+      setActivityTargets(activityTargets.filter((t: any) => t.id !== targetId));
+    } catch (err: any) {
+      alert("Failed to delete target: " + err.message);
+    }
+  };
+
+  // Get sales name for target dialog
+  const getSalesName = async (salesId: string) => {
+    const supabase = createClient();
+    const { data: salesUser } = await supabase
+      .from("users")
+      .select("nama_lengkap")
+      .eq("id", salesId)
+      .single();
+    return salesUser?.nama_lengkap || "Sales";
   };
 
   // Potential Revenue adalah akumulasi Potential Leads terakhir tiap customer
@@ -605,27 +651,46 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                             </div>
                           </div>
                         </button>
-                        {canEdit && (
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Get latest activity data for this customer (first activity in sorted list)
-                              const latest = group.activities.length > 0 ? group.activities[0] : null;
-                              setDefaultValues({
-                                pic: latest?.pic || "",
-                                potentialValue: latest ? (parseFloat(latest.potential_value) || 0) : 0,
-                                customerId: group.customerId,
-                              });
-                              setEditingActivity(null);
-                              setShowDialog(true);
-                            }}
-                            className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
-                          >
-                            <Users className="h-4 w-4" />
-                            Add Activity
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {isGM && (
+                            <Button
+                              size="sm"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setTargetSalesId(campaign.sales_id);
+                                const salesName = await getSalesName(campaign.sales_id);
+                                setTargetSalesName(salesName);
+                                setEditingTarget(null);
+                                setShowTargetDialog(true);
+                              }}
+                              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                            >
+                              <Target className="h-4 w-4" />
+                              Set Target
+                            </Button>
+                          )}
+                          {canEdit && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Get latest activity data for this customer (first activity in sorted list)
+                                const latest = group.activities.length > 0 ? group.activities[0] : null;
+                                setDefaultValues({
+                                  pic: latest?.pic || "",
+                                  potentialValue: latest ? (parseFloat(latest.potential_value) || 0) : 0,
+                                  customerId: group.customerId,
+                                });
+                                setEditingActivity(null);
+                                setShowDialog(true);
+                              }}
+                              className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                            >
+                              <Users className="h-4 w-4" />
+                              Add Activity
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -637,17 +702,183 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                           <div className="relative">
                             {/* Activities Timeline */}
                             <div className="space-y-8">
-                              {group.activities
-                                .sort((a: any, b: any) => {
-                                  const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
-                                  const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
-                                  return dateB - dateA; // Newest first
-                                })
-                                .map((activity: any, index: number) => {
+                              {(() => {
+                                // Get targets for this campaign
+                                const campaignTargets = activityTargets.filter((t: any) => t.campaign_id === campaign.id);
+                                
+                                // Combine activities and targets, then sort by date
+                                const timelineItems: any[] = [
+                                  ...group.activities.map((a: any) => ({
+                                    type: 'activity',
+                                    data: a,
+                                    date: new Date(a.tanggal_aktivitas || a.created_at)
+                                  })),
+                                  ...campaignTargets.map((t: any) => ({
+                                    type: 'target',
+                                    data: t,
+                                    date: new Date(t.target_date)
+                                  }))
+                                ].sort((a: any, b: any) => {
+                                  return b.date.getTime() - a.date.getTime(); // Newest first
+                                });
+
+                                return timelineItems.map((item: any, index: number) => {
+                                  const isLast = index === timelineItems.length - 1;
+                                  
+                                  // If it's a target
+                                  if (item.type === 'target') {
+                                    const target = item.data;
+                                    const targetDate = new Date(target.target_date);
+                                    const isOverdue = targetDate < new Date() && !group.activities.some((a: any) => 
+                                      a.jenis_aktivitas === target.jenis_aktivitas && 
+                                      new Date(a.tanggal_aktivitas || a.created_at).toDateString() === targetDate.toDateString()
+                                    );
+                                    const isCompleted = group.activities.some((a: any) => 
+                                      a.jenis_aktivitas === target.jenis_aktivitas && 
+                                      new Date(a.tanggal_aktivitas || a.created_at).toDateString() === targetDate.toDateString()
+                                    );
+
+                                    return (
+                                      <div key={`target-${target.id}`} className="relative flex items-start gap-6">
+                                        {/* Timeline Line */}
+                                        {!isLast && (
+                                          <div 
+                                            className="absolute left-8 w-0.5 bg-gradient-to-b from-blue-400 via-purple-400 to-pink-400 dark:from-blue-500 dark:via-purple-500 dark:to-pink-500"
+                                            style={{ 
+                                              top: '2rem',
+                                              height: 'calc(100% - 2rem + 2rem + 2rem)'
+                                            }}
+                                          ></div>
+                                        )}
+                                        
+                                        {/* Target Node */}
+                                        <div className="relative z-10 flex-shrink-0">
+                                          <div className={`w-16 h-16 ${
+                                            isCompleted 
+                                              ? "bg-green-500 dark:bg-green-600" 
+                                              : isOverdue 
+                                              ? "bg-red-500 dark:bg-red-600" 
+                                              : "bg-purple-500 dark:bg-purple-600"
+                                          } rounded-full border-4 border-white dark:border-slate-800 ${
+                                            isCompleted 
+                                              ? "border-green-600 dark:border-green-500" 
+                                              : isOverdue 
+                                              ? "border-red-600 dark:border-red-500" 
+                                              : "border-purple-600 dark:border-purple-500"
+                                          } shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform duration-200`}>
+                                            <Target className="h-6 w-6 text-white" />
+                                          </div>
+                                          {/* Date Badge */}
+                                          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                                            <div className="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md shadow-sm">
+                                              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                {targetDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                              </p>
+                                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                {targetDate.toLocaleDateString('id-ID', { year: 'numeric' })}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Target Card */}
+                                        <div className={`flex-1 ${
+                                          isCompleted
+                                            ? "bg-green-50 dark:bg-green-900/20"
+                                            : isOverdue
+                                            ? "bg-red-50 dark:bg-red-900/20"
+                                            : "bg-purple-50 dark:bg-purple-900/20"
+                                        } rounded-xl border-2 ${
+                                          isCompleted
+                                            ? "border-green-500 dark:border-green-600 border-dashed"
+                                            : isOverdue
+                                            ? "border-red-500 dark:border-red-600 border-dashed"
+                                            : "border-purple-500 dark:border-purple-600 border-dashed"
+                                        } p-5 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]`}>
+                                          <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                              <div className="flex items-center gap-3 mb-3">
+                                                <h4 className={`text-lg font-bold ${
+                                                  isCompleted
+                                                    ? "text-green-700 dark:text-green-400"
+                                                    : isOverdue
+                                                    ? "text-red-700 dark:text-red-400"
+                                                    : "text-purple-700 dark:text-purple-400"
+                                                }`}>
+                                                  Target: {target.jenis_aktivitas}
+                                                </h4>
+                                                {isCompleted && (
+                                                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
+                                                    Completed
+                                                  </span>
+                                                )}
+                                                {isOverdue && !isCompleted && (
+                                                  <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-full">
+                                                    Overdue
+                                                  </span>
+                                                )}
+                                                {!isOverdue && !isCompleted && (
+                                                  <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-semibold rounded-full">
+                                                    Pending
+                                                  </span>
+                                                )}
+                                              </div>
+                                              
+                                              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
+                                                <Calendar className="h-4 w-4" />
+                                                <span>Target Date: {targetDate.toLocaleDateString('id-ID', {
+                                                  weekday: 'long',
+                                                  year: 'numeric',
+                                                  month: 'long',
+                                                  day: 'numeric'
+                                                })}</span>
+                                              </div>
+                                              
+                                              {target.notes && (
+                                                <div className="mt-3 p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                    {target.notes}
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </div>
+                                            
+                                            {isGM && (
+                                              <div className="flex flex-col gap-2">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={async () => {
+                                                    setEditingTarget(target);
+                                                    setTargetSalesId(target.sales_id);
+                                                    const salesName = await getSalesName(target.sales_id);
+                                                    setTargetSalesName(salesName);
+                                                    setShowTargetDialog(true);
+                                                  }}
+                                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                >
+                                                  <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() => handleDeleteTarget(target.id)}
+                                                  className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  // If it's an activity
+                                  const activity = item.data;
                                   const activityDate = new Date(activity.tanggal_aktivitas || activity.created_at);
                                   const isClosing = activity.jenis_aktivitas === "Closing";
-                                  const isFirst = index === 0;
-                                  const isLast = index === group.activities.length - 1;
                                   
                                   // Get activity type color
                                   const getActivityColor = (type: string) => {
@@ -839,7 +1070,8 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                                       </div>
                                     </div>
                                   );
-                                })}
+                                });
+                              })()}
                             </div>
                           </div>
                         </div>
@@ -1073,6 +1305,23 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Activity Target Dialog */}
+      {showTargetDialog && (
+        <ActivityTargetDialog
+          campaign={campaign}
+          salesId={targetSalesId}
+          salesName={targetSalesName}
+          onClose={() => {
+            setShowTargetDialog(false);
+            setEditingTarget(null);
+            setTargetSalesId("");
+            setTargetSalesName("");
+          }}
+          onSave={handleTargetSaved}
+          existingTarget={editingTarget}
+        />
       )}
     </div>
   );

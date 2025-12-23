@@ -64,12 +64,23 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
     .order("tanggal_aktivitas", { ascending: false })
     .order("created_at", { ascending: false });
 
+  // Get activity targets if user is GM
+  let activityTargets = null;
+  if (userProfile.role === "GM" || userProfile.role === "GM Non Sales") {
+    const { data: targets } = await supabase
+      .from("activity_targets")
+      .select("*")
+      .eq("campaign_id", id);
+    activityTargets = targets || [];
+  }
+
   return (
     <CampaignDetail 
       campaign={campaign} 
       activities={activities || []} 
       userRole={userProfile.role}
       userId={user.id}
+      activityTargets={activityTargets}
     />
   );
 }
