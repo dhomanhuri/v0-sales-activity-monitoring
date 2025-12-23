@@ -629,104 +629,219 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
                       </div>
                     </div>
                     
-                    {/* Activities List */}
+                    {/* Timeline Infographic */}
                     {isExpanded && (
                       <div className="bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-800 dark:to-slate-800 border-t border-slate-200 dark:border-slate-600">
-                        <div className="p-4 space-y-3">
-                          {group.activities.map((activity: any) => (
-                            <div
-                              key={activity.id}
-                              className="p-4 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200 transform hover:scale-[1.01]"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <h4 className="font-semibold text-slate-900 dark:text-slate-50">
-                                      {activity.jenis_aktivitas}
-                                    </h4>
-                                    {activity.potential_value && (
-                                      <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                                        Rp {activity.potential_value.toLocaleString('id-ID')}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {activity.pic && (
-                                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                                      PIC: <span className="font-medium text-slate-700 dark:text-slate-300">{activity.pic}</span>
-                                    </p>
-                                  )}
-                                  {(() => {
-                                    // Parse presales from JSONB array
-                                    let presalesArray: string[] = [];
-                                    if (activity.presales) {
-                                      if (Array.isArray(activity.presales)) {
-                                        presalesArray = activity.presales;
-                                      } else if (typeof activity.presales === 'string') {
-                                        try {
-                                          presalesArray = JSON.parse(activity.presales);
-                                        } catch {
-                                          presalesArray = [];
-                                        }
+                        <div className="p-6">
+                          {/* Timeline Container */}
+                          <div className="relative">
+                            {/* Activities Timeline */}
+                            <div className="space-y-8">
+                              {group.activities
+                                .sort((a: any, b: any) => {
+                                  const dateA = new Date(a.tanggal_aktivitas || a.created_at).getTime();
+                                  const dateB = new Date(b.tanggal_aktivitas || b.created_at).getTime();
+                                  return dateB - dateA; // Newest first
+                                })
+                                .map((activity: any, index: number) => {
+                                  const activityDate = new Date(activity.tanggal_aktivitas || activity.created_at);
+                                  const isClosing = activity.jenis_aktivitas === "Closing";
+                                  const isFirst = index === 0;
+                                  const isLast = index === group.activities.length - 1;
+                                  
+                                  // Get activity type color
+                                  const getActivityColor = (type: string) => {
+                                    switch (type) {
+                                      case "Closing":
+                                        return {
+                                          circle: "bg-green-500 dark:bg-green-600",
+                                          border: "border-green-600 dark:border-green-500",
+                                          bg: "bg-green-50 dark:bg-green-900/20",
+                                          text: "text-green-700 dark:text-green-400",
+                                          line: "bg-green-400 dark:bg-green-500"
+                                        };
+                                      case "Proposal":
+                                        return {
+                                          circle: "bg-blue-500 dark:bg-blue-600",
+                                          border: "border-blue-600 dark:border-blue-500",
+                                          bg: "bg-blue-50 dark:bg-blue-900/20",
+                                          text: "text-blue-700 dark:text-blue-400",
+                                          line: "bg-blue-400 dark:bg-blue-500"
+                                        };
+                                      case "Presentasi":
+                                        return {
+                                          circle: "bg-purple-500 dark:bg-purple-600",
+                                          border: "border-purple-600 dark:border-purple-500",
+                                          bg: "bg-purple-50 dark:bg-purple-900/20",
+                                          text: "text-purple-700 dark:text-purple-400",
+                                          line: "bg-purple-400 dark:bg-purple-500"
+                                        };
+                                      case "Meeting":
+                                        return {
+                                          circle: "bg-orange-500 dark:bg-orange-600",
+                                          border: "border-orange-600 dark:border-orange-500",
+                                          bg: "bg-orange-50 dark:bg-orange-900/20",
+                                          text: "text-orange-700 dark:text-orange-400",
+                                          line: "bg-orange-400 dark:bg-orange-500"
+                                        };
+                                      default:
+                                        return {
+                                          circle: "bg-slate-500 dark:bg-slate-600",
+                                          border: "border-slate-600 dark:border-slate-500",
+                                          bg: "bg-slate-50 dark:bg-slate-900/20",
+                                          text: "text-slate-700 dark:text-slate-400",
+                                          line: "bg-slate-400 dark:bg-slate-500"
+                                        };
+                                    }
+                                  };
+                                  
+                                  const colors = getActivityColor(activity.jenis_aktivitas);
+                                  
+                                  // Parse presales
+                                  let presalesArray: string[] = [];
+                                  if (activity.presales) {
+                                    if (Array.isArray(activity.presales)) {
+                                      presalesArray = activity.presales;
+                                    } else if (typeof activity.presales === 'string') {
+                                      try {
+                                        presalesArray = JSON.parse(activity.presales);
+                                      } catch {
+                                        presalesArray = [];
                                       }
                                     }
-                                    
-                                    if (presalesArray.length > 0) {
-                                      const presalesNames = presalesArray
-                                        .map((id: string) => presalesMap.get(id))
-                                        .filter(Boolean);
+                                  }
+                                  const presalesNames = presalesArray
+                                    .map((id: string) => presalesMap.get(id))
+                                    .filter(Boolean);
+                                  
+                                  return (
+                                    <div key={activity.id} className="relative flex items-start gap-6">
+                                      {/* Timeline Line - connects from center of current node to center of next node, only if not last */}
+                                      {!isLast && (
+                                        <div 
+                                          className="absolute left-8 w-0.5 bg-gradient-to-b from-blue-400 via-purple-400 to-pink-400 dark:from-blue-500 dark:via-purple-500 dark:to-pink-500"
+                                          style={{ 
+                                            top: '2rem', // Center of current node (half of 4rem/64px)
+                                            height: 'calc(100% - 2rem + 2rem + 2rem)' // Full height minus top offset, plus spacing, plus half of next node
+                                          }}
+                                        ></div>
+                                      )}
                                       
-                                      if (presalesNames.length > 0) {
-                                        return (
-                                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                                            Presales: <span className="font-medium text-slate-700 dark:text-slate-300">
-                                              {presalesNames.join(", ")}
-                                            </span>
-                                          </p>
-                                        );
-                                      }
-                                    }
-                                    return null;
-                                  })()}
-                                  {activity.keterangan && (
-                                    <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                                      {activity.keterangan}
-                                    </p>
-                                  )}
-                                  <p className="text-xs text-slate-600 dark:text-slate-400">
-                                    Date: {new Date(activity.tanggal_aktivitas || activity.created_at).toLocaleDateString('en-US', {
-                                      weekday: 'long',
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric'
-                                    })}
-                                  </p>
-                                </div>
-                                {canEdit && (
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        setEditingActivity(activity);
-                                        setShowDialog(true);
-                                      }}
-                                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteActivity(activity.id)}
-                                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
+                                      {/* Timeline Node */}
+                                      <div className="relative z-10 flex-shrink-0">
+                                        <div className={`w-16 h-16 ${colors.circle} rounded-full border-4 border-white dark:border-slate-800 ${colors.border} shadow-lg flex items-center justify-center transform hover:scale-110 transition-transform duration-200`}>
+                                          <div className="text-white font-bold text-xs text-center leading-tight">
+                                            {activity.jenis_aktivitas.split(' ').map((word: string) => word[0]).join('').slice(0, 2).toUpperCase()}
+                                          </div>
+                                        </div>
+                                        {/* Date Badge */}
+                                        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                                          <div className="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-md shadow-sm">
+                                            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                              {activityDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                            </p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                              {activityDate.toLocaleDateString('id-ID', { year: 'numeric' })}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Activity Card */}
+                                      <div className={`flex-1 ${colors.bg} rounded-xl border-2 ${colors.border} p-5 shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-3">
+                                              <h4 className={`text-lg font-bold ${colors.text}`}>
+                                                {activity.jenis_aktivitas}
+                                              </h4>
+                                              {isClosing && (
+                                                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">
+                                                  CLOSED
+                                                </span>
+                                              )}
+                                            </div>
+                                            
+                                            {activity.potential_value && parseFloat(activity.potential_value) > 0 && (
+                                              <div className="mb-3">
+                                                <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Potential Value</p>
+                                                <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                                                  Rp {parseFloat(activity.potential_value).toLocaleString('id-ID')}
+                                                </p>
+                                              </div>
+                                            )}
+                                            
+                                            <div className="space-y-2">
+                                              {activity.pic && (
+                                                <div className="flex items-center gap-2">
+                                                  <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                                                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                                                    <span className="font-semibold">PIC:</span> {activity.pic}
+                                                  </p>
+                                                </div>
+                                              )}
+                                              
+                                              {presalesNames.length > 0 && (
+                                                <div className="flex items-center gap-2">
+                                                  <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                                                  <p className="text-sm text-slate-700 dark:text-slate-300">
+                                                    <span className="font-semibold">Presales:</span> {presalesNames.join(", ")}
+                                                  </p>
+                                                </div>
+                                              )}
+                                              
+                                              {activity.keterangan && (
+                                                <div className="mt-3 p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                                                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                    {activity.keterangan}
+                                                  </p>
+                                                </div>
+                                              )}
+                                              
+                                              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                                <div className="w-2 h-2 bg-slate-400 rounded-full"></div>
+                                                <p className="text-xs text-slate-600 dark:text-slate-400">
+                                                  {activityDate.toLocaleDateString('id-ID', {
+                                                    weekday: 'long',
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                  })}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          
+                                          {canEdit && (
+                                            <div className="flex flex-col gap-2">
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setEditingActivity(activity);
+                                                  setShowDialog(true);
+                                                }}
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                              >
+                                                <Edit className="h-4 w-4" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteActivity(activity.id)}
+                                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                             </div>
-                          ))}
+                          </div>
                         </div>
                       </div>
                     )}
