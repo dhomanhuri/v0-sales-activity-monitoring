@@ -251,7 +251,11 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
                 return (
                   <div
                     key={campaign.id}
-                    className="p-6 rounded-xl bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-700 dark:to-slate-700 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200"
+                    className="p-6 rounded-xl bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-700 dark:to-slate-700 border border-slate-200 dark:border-slate-600 hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+                    onClick={() => {
+                      emitRouteLoading();
+                      router.push(`/dashboard/campaigns/${campaign.id}`);
+                    }}
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -268,7 +272,8 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             emitRouteLoading();
                             router.push(`/dashboard/campaigns/${campaign.id}`);
                           }}
@@ -281,7 +286,8 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setEditingCampaign(campaign);
                                 setShowDialog(true);
                               }}
