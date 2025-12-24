@@ -7,6 +7,7 @@ import { LayoutDashboard, Users, Activity, Target, Settings, LogOut, Building2, 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
+import { emitRouteLoading } from "./route-loading";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -53,6 +54,7 @@ export function Sidebar({ user }: { user: any }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => emitRouteLoading()}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                 isActive
@@ -77,6 +79,7 @@ export function Sidebar({ user }: { user: any }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => emitRouteLoading()}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive

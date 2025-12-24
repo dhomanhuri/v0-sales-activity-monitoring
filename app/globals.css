@@ -123,3 +123,32 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes route-loading {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+.animate-loading-bar {
+  animation: route-loading 0.9s ease-in-out infinite;
+}
+
+@keyframes route-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  30% {
+    transform: translateY(-6px) scale(1.05);
+  }
+}
+
+.animate-loading-bounce {
+  animation: route-bounce 0.8s ease-in-out infinite;
+}

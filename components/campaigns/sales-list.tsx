@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Eye, TrendingUp, Target, Users, DollarSign, Filter, X, ArrowUpDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { emitRouteLoading } from "../route-loading";
 
 export function SalesList({ initialSales }: { initialSales: any[] }) {
   const [search, setSearch] = useState("");
@@ -202,7 +203,10 @@ export function SalesList({ initialSales }: { initialSales: any[] }) {
               <Card
                 key={sales.id}
                 className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer group"
-                onClick={() => router.push(`/dashboard/campaigns/sales/${sales.id}`)}
+                onClick={() => {
+                  emitRouteLoading();
+                  router.push(`/dashboard/campaigns/sales/${sales.id}`);
+                }}
               >
                 <CardContent className="p-6">
                   {/* Header with Avatar and Name */}
@@ -231,6 +235,7 @@ export function SalesList({ initialSales }: { initialSales: any[] }) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        emitRouteLoading();
                         router.push(`/dashboard/campaigns/sales/${sales.id}`);
                       }}
                       className="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors opacity-0 group-hover:opacity-100"

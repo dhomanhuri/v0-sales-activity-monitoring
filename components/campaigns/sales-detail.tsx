@@ -8,6 +8,7 @@ import { Plus, Trash2, Edit, Eye, ArrowLeft, Target, Users, DollarSign, Trending
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from 'next/navigation';
 import { CampaignDialog } from "./campaign-dialog";
+import { emitRouteLoading } from "../route-loading";
 
 export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) {
   const [campaigns, setCampaigns] = useState(initialCampaigns);
@@ -22,7 +23,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
 
   const handleCampaignSaved = (updatedCampaign: any) => {
     if (editingCampaign) {
-      setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
+      setCampaigns(campaigns.map((c: any) => c.id === updatedCampaign.id ? updatedCampaign : c));
       setEditingCampaign(null);
     } else {
       setCampaigns([updatedCampaign, ...campaigns]);
@@ -41,7 +42,7 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
         .eq("id", campaignId);
 
       if (error) throw error;
-      setCampaigns(campaigns.filter(c => c.id !== campaignId));
+      setCampaigns(campaigns.filter((c: any) => c.id !== campaignId));
     } catch (err: any) {
       alert("Failed to delete campaign: " + err.message);
     }
@@ -110,7 +111,10 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
         <div>
           <Button
             variant="ghost"
-            onClick={() => router.push("/dashboard/campaigns")}
+            onClick={() => {
+              emitRouteLoading();
+              router.push("/dashboard/campaigns");
+            }}
             className="mb-4 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -264,7 +268,10 @@ export function SalesDetail({ sales, initialCampaigns, userRole, userId }: any) 
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
+                          onClick={() => {
+                            emitRouteLoading();
+                            router.push(`/dashboard/campaigns/${campaign.id}`);
+                          }}
                           className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                         >
                           <Eye className="h-4 w-4" />

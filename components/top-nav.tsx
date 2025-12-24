@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { User } from 'lucide-react';
 import Link from "next/link";
+import { emitRouteLoading } from "./route-loading";
 
 export function TopNav({ user }: { user: any }) {
   const avatarUrl = user?.avatar_url;
@@ -34,6 +35,7 @@ export function TopNav({ user }: { user: any }) {
       </div>
       <Link
         href="/dashboard/profile"
+        onClick={() => emitRouteLoading()}
         className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-100 to-orange-200 dark:from-slate-700 dark:to-slate-700 hover:from-orange-200 hover:to-orange-300 dark:hover:from-slate-600 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 hover:text-orange-700 dark:hover:text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 border border-orange-200/50 dark:border-slate-600/50"
       >
         <User className="h-4 w-4" />

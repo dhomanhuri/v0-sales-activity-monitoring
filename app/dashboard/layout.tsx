@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from 'next/navigation';
 import { Sidebar } from "@/components/sidebar";
 import { TopNav } from "@/components/top-nav";
+import { RouteLoading } from "@/components/route-loading";
 import { Chatbot } from "@/components/chatbot/chatbot";
 
 export default async function DashboardLayout({
@@ -31,6 +32,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-orange-100 via-orange-50 to-orange-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
+      <RouteLoading />
       <Sidebar user={userProfile} />
       <div className="flex-1 flex flex-col">
         <TopNav user={userProfile} />

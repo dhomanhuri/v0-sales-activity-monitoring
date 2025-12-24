@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { CampaignActivityDialog } from "./campaign-activity-dialog";
 import { ActivityTargetDialog } from "./activity-target-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { emitRouteLoading } from "../route-loading";
 
 export function CampaignDetail({ campaign, activities: initialActivities, userRole, userId, activityTargets: initialTargets }: any) {
   const router = useRouter();
@@ -260,6 +261,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
   const hasActiveFilters = customerFilter || activityTypeFilter;
 
   const toggleCustomer = (customerId: string) => {
+    emitRouteLoading();
     setExpandedCustomers(prev => {
       const newSet = new Set(prev);
       if (newSet.has(customerId)) {
@@ -385,6 +387,7 @@ export function CampaignDetail({ campaign, activities: initialActivities, userRo
           variant="ghost"
           onClick={() => {
             // Get sales_id from campaign to go back to sales detail
+            emitRouteLoading();
             router.push(`/dashboard/campaigns/sales/${campaign.sales_id}`);
           }}
           className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
